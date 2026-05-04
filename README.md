@@ -10,17 +10,17 @@ The smallest useful plugin is a directory with one skill.
 
 ```text
 hello-plugin/
-├── .plugin/
-│   └── plugin.json
+├── plugin.json
 └── skills/
     └── greet/
         └── SKILL.md
 ```
 
-`./.plugin/plugin.json`
+`./plugin.json`
 
 ```json
 {
+  "id": "https://github.com/example/hello-plugin/tree/main",
   "name": "hello-plugin"
 }
 ```
@@ -36,7 +36,7 @@ description: Greet the user and offer help.
 Greet the user. If `$ARGUMENTS` is present, include it in the greeting.
 ```
 
-A host that supports skills can load this plugin by reading `.plugin/plugin.json`, discovering `skills/greet/SKILL.md`, and surfacing `/hello-plugin:greet`.
+A host that supports skills can load this plugin by reading `plugin.json`, discovering `skills/greet/SKILL.md`, and surfacing `/hello-plugin:greet`.
 
 > **Note:**
 > The Core Profile reading path in this document is package layout (§4), manifest loading (§5–6), discovery (§7), skills and MCP servers (§8), namespacing (§9), `${PLUGIN_ROOT}` expansion (§10), and minimum host conformance (§12). Commands, agents, rules, hooks, LSP servers, and output styles are optional extended component types defined in Appendix D.
@@ -47,7 +47,7 @@ A host that supports skills can load this plugin by reading `.plugin/plugin.json
 2. [Conformance language](#2-conformance-language)
 3. [Terminology](#3-terminology)
 4. [Plugin package model](#4-plugin-package-model)
-5. [Manifest location and precedence](#5-manifest-location-and-precedence)
+5. [Manifest location and extension fields](#5-manifest-location-and-extension-fields)
 6. [Manifest schema](#6-manifest-schema)
 7. [Component discovery](#7-component-discovery)
 8. [Component definitions](#8-component-definitions)
@@ -59,7 +59,7 @@ A host that supports skills can load this plugin by reading `.plugin/plugin.json
 **Appendices (not required for conformance)**
 
 - [Appendix A: Conformance Checklist](#appendix-a-conformance-checklist)
-- [Appendix B: Marketplace Index and Discovery](#appendix-b-marketplace-index-and-discovery)
+- [Appendix B: Marketplace Indexes](#appendix-b-marketplace-indexes)
 - [Appendix C: Extended Hook Events](#appendix-c-extended-hook-events)
 - [Appendix D: Extended Component Types](#appendix-d-extended-component-types)
 - [Design Decisions](#design-decisions)
@@ -71,6 +71,20 @@ This specification defines version `1.0.0` of the Open Plugin format.
 
 Plugin hosts and plugin packages claiming conformance to Open Plugin v1 MUST implement or follow the requirements in this document.
 
+### 1.1 Governance model
+
+Open Plugin is intended to be governed as a collaborative open standard, not as a single-vendor format. The initial governance model should be defined before the first ratified release and SHOULD use the Open Responses governance structure as a starting point.
+
+The governance process should define:
+
+1. A steering committee with one primary representative per participating implementation or vendor.
+2. A lightweight quorum and voting process for accepting changes to the core specification.
+3. A process for promoting widely adopted vendor extensions into the core specification.
+4. A shared collaboration space for implementers, initially kept small enough to move quickly.
+5. Neutral stewardship of public assets such as `openplugins.org` once the committee is formed.
+
+Vendor-specific experimentation is expected. The committee's role is to identify extensions that have proven useful across implementations and decide when they should become portable core behavior.
+
 ## 2. Conformance language
 
 The key words MUST, MUST NOT, REQUIRED, SHOULD, SHOULD NOT, RECOMMENDED, MAY, and OPTIONAL in sections 1–12 of this document are to be interpreted as described in RFC 2119 and RFC 8174 when, and only when, they appear in all capitals. Appendices and other non-normative sections use these terms informally.
@@ -81,20 +95,20 @@ The key words MUST, MUST NOT, REQUIRED, SHOULD, SHOULD NOT, RECOMMENDED, MAY, an
 | ------------------ | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | Plugin             | Package unit               | A self-contained directory that bundles one or more components and optional metadata.                                                        |
 | Plugin root        | Filesystem root            | The top-level directory of a plugin package.                                                                                                 |
-| Manifest           | Metadata document          | A `plugin.json` file in a metadata directory at the plugin root.                                                                             |
+| Manifest           | Metadata document          | A `plugin.json` file at the plugin root.                                                                                                    |
 | Component          | Plugin-provided capability | A skill or MCP server configuration (core), or an extended type such as a command, agent, rule, hook, LSP server, or output style.            |
 | Host               | Plugin runtime             | A tool that discovers, installs, loads, and executes plugin components.                                                                      |
-| Discovery source   | Scan location              | A default location, manifest-declared path, inline configuration object, or marketplace entry from which a host loads components.            |
+| Discovery source   | Scan location              | A default location, manifest-declared path, or inline configuration object from which a host loads components.                               |
 | Path config        | Discovery object           | An object with `paths` that controls scanning for a component type.                                                                          |
 | Inline MCP config  | MCP definition object      | A `mcpServers` manifest field whose object value contains an `mcpServers` key.                                                               |
-| Marketplace        | Plugin collection          | A named collection of one or more plugins declared by `marketplace.json`.                                                                    |
+| Vendor extension   | Namespaced field           | A top-level manifest object reserved for one implementation, vendor, or host family.                                                         |
 
 ## 4. Plugin package model
 
 ### 4.1 General requirements
 
 1. A plugin is a directory rooted at a single filesystem location.
-2. A plugin MUST include a manifest at `.plugin/plugin.json`.
+2. A plugin MUST include a manifest at `plugin.json` in the plugin root.
 3. A plugin MUST contain zero or more supported components. A directory with only a manifest is valid but may not be useful on hosts that require at least one supported component at runtime.
 4. All relative paths declared by the plugin MUST be interpreted relative to the plugin root.
 5. All relative paths declared by the plugin MUST start with `./`.
@@ -123,8 +137,7 @@ The first example is valid — all paths start with `./` and stay within the plu
 
 ```text
 my-plugin/
-├── .plugin/
-│   └── plugin.json
+├── plugin.json
 ├── commands/
 ├── agents/
 ├── skills/
@@ -144,8 +157,7 @@ Example: Core Profile layout (minimal)
 
 ```text
 code-assistant/
-├── .plugin/
-│   └── plugin.json
+├── plugin.json
 ├── skills/
 │   └── summarize/
 │       └── SKILL.md
@@ -156,8 +168,7 @@ Example: full plugin with all component types
 
 ```text
 devtools/
-├── .plugin/
-│   └── plugin.json
+├── plugin.json
 ├── commands/
 │   ├── deploy.md
 │   └── status.md
@@ -186,69 +197,87 @@ devtools/
 
 <!-- DISCUSSION: standard-layout-extensions — Should the standard layout include additional well-known directories such as `tests/` or `docs/`? -->
 
-> **See also:** [§5 Manifest location and precedence](#5-manifest-location-and-precedence) for how the metadata directory relates to manifest discovery, and [§7 Component discovery](#7-component-discovery) for how component directories are scanned.
+> **See also:** [§5 Manifest location and extension fields](#5-manifest-location-and-extension-fields) for manifest location and vendor extension rules, and [§7 Component discovery](#7-component-discovery) for how component directories are scanned.
 
 ### 4.3 Directory rules
 
-1. The metadata directory MUST contain `plugin.json`.
-2. The metadata directory MAY also contain `marketplace.json` when the same directory root is both a plugin root and a marketplace root.
-3. Component directories such as `skills/`, when present, MUST exist at the plugin root, not inside the metadata directory.
-4. Missing component directories are not errors.
+1. The manifest file MUST be named `plugin.json` and live at the plugin root.
+2. Component directories such as `skills/`, when present, MUST exist at the plugin root.
+3. Missing component directories are not errors.
 
 Example:
 
 ```text
 my-plugin/
-└── .plugin/
-    ├── plugin.json
-    └── marketplace.json
+├── plugin.json
+└── skills/
+    └── summarize/
+        └── SKILL.md
 ```
 
-## 5. Manifest location and precedence
+## 5. Manifest location and extension fields
 
-### 5.1 Manifest locations
+### 5.1 Manifest location
 
-Hosts MUST check for a manifest at `.plugin/plugin.json`.
+Hosts MUST check for a manifest at `plugin.json` in the plugin root.
 
-A host that defines a vendor-prefixed manifest location such as `.<tool-name>-plugin/plugin.json` MUST also check that location and SHOULD prefer it over `.plugin/plugin.json` when both are present.
+The Open Plugin core specification defines one manifest file per plugin. Host-specific behavior SHOULD be expressed through namespaced top-level fields inside `plugin.json`, not by adding additional manifest files or vendor-prefixed manifest directories.
 
-| Path                              | Description              | Notes                                   |
-| --------------------------------- | ------------------------ | --------------------------------------- |
-| `.plugin/plugin.json`             | Vendor-neutral manifest  | REQUIRED. RECOMMENDED for new multi-host plugins. |
-| `.<tool-name>-plugin/plugin.json` | Vendor-specific manifest | Preferred by the matching host when present.      |
+| Path          | Description             | Notes                                  |
+| ------------- | ----------------------- | -------------------------------------- |
+| `plugin.json` | Vendor-neutral manifest | REQUIRED. Lives at the plugin root.    |
 
 Example:
 
 ```text
 my-plugin/
-├── .plugin/plugin.json
-└── .claude-plugin/plugin.json
+├── plugin.json
+└── skills/summarize/SKILL.md
 ```
 
-A Claude-like host selects `.claude-plugin/plugin.json`. A host with no vendor-prefixed manifest location selects `.plugin/plugin.json`.
+A host selects `plugin.json` and then applies any extension fields it understands.
 
-<!-- DISCUSSION: vendor-prefix-discovery — Should the spec define a registry or convention for vendor prefixes, or leave it entirely host-defined? -->
+> **See also:** [§6 Manifest schema](#6-manifest-schema) for the structure of the manifest file, and [§12 Host conformance](#12-host-conformance) for requirements around supporting `plugin.json`.
 
-> **See also:** [§6 Manifest schema](#6-manifest-schema) for the structure of the manifest file, and [§12 Host conformance](#12-host-conformance) for requirements around supporting `.plugin/plugin.json`.
+### 5.2 Vendor extension fields
 
-### 5.2 Multiple manifest locations
+Implementations MAY define namespaced top-level manifest fields for behavior that is not part of the core specification.
 
-1. A plugin MAY provide identical manifest content in multiple locations.
-2. When multiple manifest locations exist, a host SHOULD prefer its own vendor-prefixed manifest and SHOULD otherwise fall back to `.plugin/plugin.json`.
-3. When both locations exist and contain different content, the selected manifest is authoritative for that host.
-4. Hosts MAY warn when multiple manifest locations contain inconsistent content.
+1. Extension fields SHOULD be top-level objects.
+2. Extension field names SHOULD identify the implementation, vendor, host family, or standards group that owns the extension.
+3. Hosts MUST ignore extension fields they do not understand.
+4. Extension fields MUST NOT redefine the semantics of core fields.
+5. Extensions that become useful across implementations SHOULD be proposed for promotion into the core specification through the governance process.
+
+Example:
+
+```json
+{
+  "id": "https://github.com/acme/devtools/tree/main",
+  "name": "devtools",
+  "version": "2.0.0",
+  "openai": {
+    "sharing": {
+      "workspaceInstall": true
+    }
+  },
+  "vscode": {
+    "activationEvents": ["onLanguage:typescript"]
+  }
+}
+```
 
 > **Implementer note:**
-> Example user-facing message: `Plugin "devtools": manifest at ".claude-plugin/plugin.json" differs from ".plugin/plugin.json". Using ".claude-plugin/plugin.json" as authoritative.`
+> Example user-facing message: `Plugin "devtools": ignoring unsupported extension field "vscode".`
 >
 > Example machine-readable record:
 > ```json
-> {"level":"warn","event":"open_plugin.manifest.inconsistent","plugin":"devtools","selected":".claude-plugin/plugin.json","other":".plugin/plugin.json","action":"used_selected"}
+> {"level":"info","event":"open_plugin.manifest.unsupported_extension","plugin":"devtools","field":"vscode","action":"ignored"}
 > ```
 
 ## 6. Manifest schema
 
-> **See also:** [§5 Manifest location and precedence](#5-manifest-location-and-precedence) for where the manifest is loaded from, and [§7 Component discovery](#7-component-discovery) for how manifest fields control discovery paths.
+> **See also:** [§5 Manifest location and extension fields](#5-manifest-location-and-extension-fields) for where the manifest is loaded from, and [§7 Component discovery](#7-component-discovery) for how manifest fields control discovery paths.
 
 ### 6.1 Manifest object
 
@@ -256,6 +285,7 @@ The manifest MUST be JSON and MUST contain a top-level object.
 
 ```json
 {
+  "id": "https://github.com/example/plugin/tree/main",
   "name": "plugin-name",
   "version": "1.2.0",
   "description": "Brief plugin description",
@@ -283,6 +313,7 @@ Example: minimal manifest
 
 ```json
 {
+  "id": "https://github.com/example/minimal-plugin/tree/main",
   "name": "minimal-plugin",
   "version": "1.0.0",
   "description": "The simplest possible plugin."
@@ -293,6 +324,7 @@ Example: full manifest
 
 ```json
 {
+  "id": "https://github.com/open-plugin-examples/devtools/tree/main",
   "name": "devtools",
   "version": "2.0.0",
   "description": "Full-featured development toolkit.",
@@ -311,11 +343,32 @@ Example: full manifest
 }
 ```
 
-### 6.2 Required field
+### 6.2 Required fields
 
 | Field  | Type   | Description                                                      |
 | ------ | ------ | ---------------------------------------------------------------- |
-| `name` | string | Unique plugin identifier used for namespacing and settings keys. |
+| `id`   | string | Durable plugin identifier. SHOULD be a URL for the canonical plugin location. |
+| `name` | string | Human-readable plugin identifier used for namespacing and settings keys. |
+
+The `id` field is intended for provenance, attribution, policy, and update tracking. The simplest portable form is the canonical URL where the plugin can be retrieved, such as a GitHub repository path or a cloud-hosted plugin URL.
+
+Examples:
+
+```json
+{
+  "id": "https://github.com/acme/agent-plugins/tree/main/plugins/devtools",
+  "name": "devtools"
+}
+```
+
+```json
+{
+  "id": "https://plugins.example.com/acme/devtools",
+  "name": "devtools"
+}
+```
+
+Hosts MAY store content hashes, resolved commit SHAs, signatures, or other integrity metadata alongside the plugin, but those mechanisms are not required by this specification.
 
 ### 6.3 Metadata fields
 
@@ -468,7 +521,7 @@ Example: given a plugin `reports-plugin` with this layout:
 
 ```text
 reports-plugin/
-├── .plugin/plugin.json
+├── plugin.json
 ├── skills/summarize/SKILL.md
 └── .mcp.json
 ```
@@ -489,7 +542,7 @@ Example: default discovery only
 
 ```text
 reports-plugin/
-├── .plugin/plugin.json
+├── plugin.json
 ├── skills/summarize/SKILL.md
 └── .mcp.json
 ```
@@ -498,10 +551,11 @@ The host discovers skill `summarize` and MCP servers from `.mcp.json` — all fr
 
 Example: manifest paths override defaults
 
-`./.plugin/plugin.json`
+`./plugin.json`
 
 ```json
 {
+  "id": "https://github.com/example/reports-plugin/tree/main",
   "name": "reports-plugin",
   "skills": "./custom-skills/"
 }
@@ -517,10 +571,11 @@ The host discovers only `/reports-plugin:deploy` from `custom-skills/`. The defa
 
 Example: retaining the default alongside custom paths
 
-`./.plugin/plugin.json`
+`./plugin.json`
 
 ```json
 {
+  "id": "https://github.com/example/reports-plugin/tree/main",
   "name": "reports-plugin",
   "skills": ["./skills/", "./custom-skills/"]
 }
@@ -733,19 +788,19 @@ Hosts MAY use `version` to determine whether updates are available and whether c
 A host is conformant to Open Plugin v1 if it:
 
 1. Can load a plugin from a directory path.
-2. Parses `.plugin/plugin.json`.
+2. Parses `plugin.json`.
 3. For each core component type it supports (skills, MCP servers), discovers components in default locations.
 4. Respects manifest-declared discovery paths for supported component types.
 5. If the host launches plugin subprocesses (e.g., MCP servers), expands `${PLUGIN_ROOT}` in runtime configuration values (`command`, `args`, `env`, `cwd`).
 6. Supports at least one core component type (skills or MCP servers).
 
-Support for a vendor-prefixed manifest location such as `.<tool-name>-plugin/plugin.json` is supplemental. A host that defines such a location MUST still support `.plugin/plugin.json`.
+Host-specific behavior should be represented by namespaced extension fields in `plugin.json`. This keeps the plugin package inspectable through one canonical manifest while allowing implementations to experiment independently.
 
 Example: a skills-only host is conformant. It only needs to:
 
 ```text
 1. Accept a plugin directory path.
-2. Read .plugin/plugin.json for the plugin name.
+2. Read plugin.json for the plugin id and name.
 3. Scan skills/ for SKILL.md files (default location discovery).
 4. Respect manifest-declared skill paths.
 ```
@@ -772,10 +827,11 @@ A host is not required to support every component type. Incremental adoption is 
 
 ### Plugin loader
 
-- [ ] Parse `.plugin/plugin.json` ([§5.1](#51-manifest-locations))
-- [ ] Support vendor-prefixed manifest locations if applicable ([§5.1](#51-manifest-locations))
+- [ ] Parse `plugin.json` ([§5.1](#51-manifest-location))
+- [ ] Validate required `id` and `name` fields ([§6.2](#62-required-fields))
 - [ ] Validate plugin name against naming constraints ([§6.7](#67-plugin-name-constraints))
 - [ ] Reject paths that escape the plugin root via `../` ([§4.1](#41-general-requirements))
+- [ ] Ignore unsupported vendor extension fields ([§5.2](#52-vendor-extension-fields))
 
 ### Component discovery
 
@@ -807,7 +863,7 @@ A host is not required to support every component type. Incremental adoption is 
 
 | Decision point | Existing spec behavior | Human-readable example | JSON example | Fatal? | Verification |
 | --- | --- | --- | --- | --- | --- |
-| Inconsistent manifest content | Hosts MAY warn when multiple manifest locations contain inconsistent content ([§5.2](#52-multiple-manifest-locations)) | `WARN open-plugin: plugin "devtools" has inconsistent manifests across .plugin/plugin.json and .claude-plugin/plugin.json; using .claude-plugin/plugin.json` | `{"level":"warn","event":"open_plugin.manifest.inconsistent","plugin":"devtools","selected":".claude-plugin/plugin.json","other":".plugin/plugin.json","action":"used_selected"}` | No | Check that the host selects one manifest and continues |
+| Unsupported extension field | Hosts MUST ignore extension fields they do not understand ([§5.2](#52-vendor-extension-fields)) | `INFO open-plugin: plugin "devtools" declares unsupported extension field "vscode"; ignored` | `{"level":"info","event":"open_plugin.manifest.unsupported_extension","plugin":"devtools","field":"vscode","action":"ignored"}` | No | Check that core fields and supported extensions still load |
 | Invalid ambiguous object field | Hosts SHOULD treat unrecognized object shapes as invalid and SHOULD warn ([§6.6](#66-object-field-disambiguation)) | `WARN open-plugin: plugin "devtools" manifest field "mcpServers" is invalid: expected either a path config with "paths" key or an inline config with "mcpServers" key; field ignored, plugin load continues` | `{"level":"warn","event":"open_plugin.manifest.invalid_object","plugin":"devtools","field":"mcpServers","action":"ignored","continue":true}` | No | Check that the invalid field is skipped and remaining components load |
 | MCP server startup failure | If a server fails to start, the host SHOULD log the error and continue loading other components ([§8.2.2](#822-plugin-specific-discovery-rules)) | `ERROR open-plugin: plugin "devtools" MCP server "database" failed to start: connection refused on port 5432. Other plugin components remain available.` | `{"level":"error","event":"open_plugin.mcp.start_failed","plugin":"devtools","server":"database","error":"connection refused on port 5432","action":"continue_without_mcp"}` | No | Check that other components still load |
 | MCP server name conflict | Hosts SHOULD warn and SHOULD resolve conflicts deterministically. Conflicting names MUST NOT crash plugin loading ([§8.2.2](#822-plugin-specific-discovery-rules)) | `WARN open-plugin: plugin "devtools" MCP server name "filesystem" defined in multiple config files; using first definition` | `{"level":"warn","event":"open_plugin.mcp.name_conflict","plugin":"devtools","server":"filesystem","action":"used_first"}` | No | Check that one definition wins deterministically and loading continues |
@@ -834,13 +890,13 @@ The `plugin-name:component-name` format was chosen because colons are visually d
 
 MCP tool identifiers are consumed by language models, which may tokenize or interpret colons and slashes unpredictably. The `mcp__plugin_{plugin}_{server}__{tool}` format uses only characters that models handle reliably. The double-underscore separators provide unambiguous parsing boundaries even when plugin or tool names contain single underscores.
 
-### Why `.plugin/plugin.json` is the conformance floor
+### Why root-level `plugin.json` is the conformance floor
 
-Every conformant host MUST check `.plugin/plugin.json` as the vendor-neutral manifest location ([§5.1](#51-manifest-locations)). This gives plugin authors a single guaranteed path that works across all hosts without vendor-specific knowledge. Vendor-prefixed manifests (e.g., `.claude-plugin/plugin.json`) are supplemental overrides — they let a plugin customize behavior for a specific host, but a plugin that ships only `.plugin/plugin.json` is portable by default. Making the vendor-neutral path mandatory and vendor-prefixed paths optional keeps the ecosystem interoperable while allowing per-host specialization where needed.
+Every conformant host MUST check `plugin.json` at the plugin root ([§5.1](#51-manifest-location)). This gives plugin authors a single guaranteed file that works across all hosts without vendor-specific path knowledge. Vendor-specific behavior belongs in namespaced extension fields, so custom behavior is visible in the same manifest as the portable core fields.
 
-### Why `.plugin/` instead of a dotfile manifest?
+### Why one manifest instead of per-vendor files?
 
-A metadata directory (`.plugin/`) allows the manifest to coexist with future metadata files (e.g., `marketplace.json`, lock files) without polluting the plugin root with multiple dotfiles. A single well-known directory is also easier for hosts to check than scanning for multiple dotfile patterns.
+One manifest avoids scattering plugin configuration across multiple directories and makes it easier for authors, hosts, and reviewers to see which fields are shared and which fields are implementation-specific. Top-level extension objects provide room for host-specific experimentation without creating competing manifest precedence rules.
 
 ### Why `${PLUGIN_ROOT}` over relative paths in configs?
 
@@ -941,21 +997,19 @@ No test harness or validation tool is specified. A future version may define:
 
 ---
 
-## Appendix B: Marketplace Index and Discovery
+## Appendix B: Marketplace Indexes
 
-*This appendix is not required for v1 conformance. It describes a marketplace indexing mechanism implemented by some hosts. A future version of the spec may promote this to a required section after cross-tool validation.*
+*This appendix is not required for v1 conformance. Marketplaces, registries, sharing URLs, and organization catalogs are implementation details outside the core plugin package specification. This appendix records one possible indexing mechanism used by some hosts, but plugins remain valid without any marketplace file.*
 
 ### B.1 Marketplace discovery order
 
-Hosts that support marketplaces should search for `marketplace.json` in this order:
+Hosts that support marketplaces may define their own marketplace discovery rules. One existing pattern is to search for `marketplace.json` at the marketplace root:
 
-| Path                                   | Priority | Description                         |
-| -------------------------------------- | -------- | ----------------------------------- |
-| `marketplace.json`                     | First    | Marketplace root index.             |
-| `.plugin/marketplace.json`             | Second   | Vendor-neutral metadata directory.  |
-| `.<tool-name>-plugin/marketplace.json` | Third    | Vendor-specific metadata directory. |
+| Path               | Description              |
+| ------------------ | ------------------------ |
+| `marketplace.json` | Marketplace root index.  |
 
-The first match wins.
+The Open Plugin core specification does not require hosts to search for marketplace indexes and does not define marketplace conformance.
 
 ### B.2 Marketplace schema
 
