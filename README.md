@@ -879,7 +879,7 @@ One manifest avoids scattering plugin configuration across multiple directories 
 
 ### Why plugin variables over relative paths in configs?
 
-Hook commands, MCP server arguments, and LSP configurations often need absolute paths at runtime. `${PLUGIN_ROOT}` provides an unambiguous, host-resolved anchor for bundled files regardless of the current working directory. `${PLUGIN_DATA}` separately identifies host-managed writable state that persists when package contents are replaced during an update.
+MCP server commands and arguments often need absolute paths at runtime. Relative paths from the config file location would be ambiguous when configs are loaded from different directories. `${PLUGIN_ROOT}` provides an unambiguous, host-resolved anchor for bundled files, while `${PLUGIN_DATA}` identifies host-managed writable state that persists when package contents are replaced during an update. Sections 8 and 10 require this behavior for MCP servers; Appendix D recommends analogous behavior for optional executable component types.
 
 ### Why optional-component failures are non-fatal
 
@@ -1061,6 +1061,8 @@ Core hook events: `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `SessionSta
 
 Hook action types: `command` (shell command), `http` (POST to URL), `prompt` (LLM evaluation), `agent` (agentic verifier).
 
+Hosts supporting `command` hook actions should provide `PLUGIN_ROOT` and `PLUGIN_DATA` and expand `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` in `command`, `args`, `env`, and `cwd` string values when those fields are present.
+
 ### D.5 LSP servers
 
 The default LSP configuration path is `.lsp.json`. LSP servers MAY also be declared inline in the manifest `lspServers` field. The top-level object uses direct server-name keys.
@@ -1068,6 +1070,8 @@ The default LSP configuration path is `.lsp.json`. LSP servers MAY also be decla
 Required fields: `command` (executable on `$PATH`), `extensionToLanguage` (file extension to language ID mapping).
 
 Optional fields: `args`, `transport`, `env`, `initializationOptions`, `settings`, `workspaceFolder`, `startupTimeout`, `shutdownTimeout`, `restartOnCrash`, `maxRestarts`.
+
+Hosts supporting LSP servers should provide `PLUGIN_ROOT` and `PLUGIN_DATA` and expand `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` in `command`, `args`, `env`, and `workspaceFolder` string values.
 
 ### D.6 Output styles
 
