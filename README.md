@@ -224,30 +224,13 @@ A host loads and validates root `plugin.json` before discovering components or a
 
 ### 5.2 Client extension directories
 
-A client MAY define capabilities, configuration, metadata, and portable-component overrides inside a top-level `.<client>/` directory.
+A client MAY use a top-level `.<client>/` directory for client-specific content. Open Plugin assigns no structure or semantics to the contents of that directory.
 
 1. Client-specific content MUST live inside the namespace owned by that client and MUST NOT add fields to root `plugin.json`.
 2. Hosts MUST ignore client namespaces they do not implement.
 3. Client namespace contents do not affect Open Plugin conformance.
-4. A client MAY define how content in its namespace supplements or overrides portable components. Those semantics are owned by the client and are outside this specification.
-5. A portable component remains the fallback for hosts that do not implement a corresponding client namespace override.
-6. Top-level paths not defined by Open Plugin v1 MUST NOT be interpreted as portable component types.
-
-Example: client-specific progressive enhancement
-
-```text
-task-plugin/
-├── plugin.json
-├── skills/
-│   └── schedule-task/
-│       └── SKILL.md
-└── .codex/
-    └── skills/
-        └── schedule-task/
-            └── SKILL.md
-```
-
-All conformant skills hosts can load `skills/schedule-task/SKILL.md`. Codex may additionally define the `.codex/skills/schedule-task/SKILL.md` file as an override. Other hosts ignore `.codex/`.
+4. A client MAY define its own precedence rules, including rules that supplement or override portable components in the plugin root. Such behavior is client-specific and outside this specification.
+5. Top-level paths not defined by Open Plugin v1 MUST NOT be interpreted as portable component types.
 
 ## 6. Manifest schema
 
