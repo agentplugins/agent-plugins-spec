@@ -954,14 +954,6 @@ v1.0.0 assumes plugins are source-distributable (scripts, markdown, JSON configs
 - Platform-specific binary selection
 - Integrity verification for binary artifacts
 
-### Message channels
-
-Some hosts support a `channels` manifest field for message channel injection (e.g., Telegram, Slack, Discord style integrations) bound to MCP servers. This feature is host-specific and too specialized for v1 core. A future version may define:
-
-- A `channels` manifest field with per-channel MCP server bindings
-- Per-channel user configuration for credentials and settings
-- A standard protocol for channel message injection into conversations
-
 ### Output styles runtime semantics
 
 The `outputStyles` field is defined only at the discovery level. A future version should specify the runtime format and rendering contract for output style resources.
