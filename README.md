@@ -2,7 +2,7 @@
 
 **Spec Version: 1.0.0**
 
-This document defines the canonical Open Plugin Specification v1.0.0. It is a self-contained specification for packaging agent extensions into distributable plugins. Everything in sections 1–11 is required for conformance.
+This document defines the canonical Open Plugin Specification v1.0.0 for packaging agent extensions into distributable plugins.
 
 ## Quick Start (for context only — not required for conformance)
 
@@ -55,7 +55,7 @@ A host that supports skills can load this plugin by reading `plugin.json` and di
 10. [Versioning](#10-versioning)
 11. [Host conformance](#11-host-conformance)
 
-**Appendices (not required for conformance)**
+**Non-normative material**
 
 - [Appendix A: Conformance Checklist](#appendix-a-conformance-checklist)
 - [Design Decisions](#design-decisions)
@@ -73,7 +73,9 @@ Open Plugin project governance is defined separately from the portable package f
 
 ## 2. Conformance language
 
-The key words MUST, MUST NOT, REQUIRED, SHOULD, SHOULD NOT, RECOMMENDED, MAY, and OPTIONAL in sections 1–11 of this document are to be interpreted as described in RFC 2119 and RFC 8174 when, and only when, they appear in all capitals. Appendices and other non-normative sections use these terms informally.
+In the normative sections of this document, the key words MUST, MUST NOT, REQUIRED, SHOULD, SHOULD NOT, RECOMMENDED, MAY, and OPTIONAL are to be interpreted as described in RFC 2119 and RFC 8174 when, and only when, they appear in all capitals.
+
+The Quick Start, Appendix A, Design Decisions, and Future Considerations sections are non-normative. All other sections are normative.
 
 ## 3. Terminology
 
@@ -570,7 +572,7 @@ A host is not required to support every core component type. For example, a skil
 
 ## Design Decisions
 
-*This section explains why key design choices were made. It is for context only — the binding rules are in sections 1–11 above.*
+*This section explains why key design choices were made. It is for context only — the binding rules are in the normative sections above.*
 
 ### Why directory-based discovery?
 
