@@ -39,7 +39,7 @@ Greet the user. If `$ARGUMENTS` is present, include it in the greeting.
 A host that supports skills can load this plugin by reading `plugin.json`, discovering `skills/greet/SKILL.md`, and surfacing `/hello-plugin:greet`.
 
 > **Note:**
-> The Core Profile reading path in this document is package layout (§4), manifest loading (§5–6), discovery (§7), skills and MCP servers (§8), namespacing (§9), `${PLUGIN_ROOT}` expansion (§10), and minimum host conformance (§12). Commands, agents, rules, hooks, LSP servers, and output styles are optional extended component types defined in Appendix D.
+> The Core Profile reading path in this document is package layout (§4), manifest loading (§5–6), discovery (§7), skills and MCP servers (§8), namespacing (§9), plugin variable expansion (§10), and minimum host conformance (§12). Commands, agents, rules, hooks, LSP servers, and output styles are optional extended component types defined in Appendix D.
 
 ## Table of contents
 
@@ -617,7 +617,7 @@ skills/
 
 MCP server configuration follows the [Model Context Protocol specification](https://modelcontextprotocol.io/specification). The MCP spec is the source of truth for server configuration fields, transport types (stdio, HTTP/SSE), and lifecycle semantics.
 
-This specification defines how MCP servers are *discovered* within a plugin and how `${PLUGIN_ROOT}` expansion applies to configuration values.
+This specification defines how MCP servers are *discovered* within a plugin and how `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` expansion applies to configuration values.
 
 #### 8.2.1 Discovery and configuration
 
@@ -625,7 +625,7 @@ The default MCP configuration path is `.mcp.json`. MCP servers MAY also be decla
 
 The configuration MUST contain a top-level `mcpServers` object. Each key is the server name and MUST be unique within the plugin after source resolution.
 
-The `command`, `args`, `env`, and `cwd` fields in MCP server configuration MUST support `${PLUGIN_ROOT}` expansion.
+The `command`, `args`, `env`, and `cwd` fields in MCP server configuration MUST support `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` expansion.
 
 Example: `.mcp.json`
 
@@ -689,7 +689,7 @@ Example: component namespacing
 
 ## 10. Environment variables and placeholder expansion
 
-> **See also:** [§8.2 MCP servers](#82-mcp-servers) for the fields where `${PLUGIN_ROOT}` expansion applies, and [§4.1 General requirements](#41-general-requirements) for path safety rules.
+> **See also:** [§8.2 MCP servers](#82-mcp-servers) for the fields where plugin variable expansion applies, and [§4.1 General requirements](#41-general-requirements) for path safety rules.
 
 ### 10.1 Required variables
 
@@ -701,13 +701,13 @@ Hosts that launch plugin subprocesses (e.g., MCP servers, hook commands) MUST pr
 
 ### 10.1.1 Persistent data directory
 
-Hosts that provide persistent plugin storage SHOULD set a data directory variable.
+Hosts that launch plugin subprocesses MUST provide a dedicated writable data directory for each plugin and expose its absolute path through `PLUGIN_DATA`.
 
-| Variable      | Description                  | Notes        |
-| ------------- | ---------------------------- | ------------ |
-| `PLUGIN_DATA` | Persistent data directory path | RECOMMENDED. |
+| Variable      | Description                    | Notes                                             |
+| ------------- | ------------------------------ | ------------------------------------------------- |
+| `PLUGIN_DATA` | Persistent plugin data directory | REQUIRED for hosts that launch plugin subprocesses. |
 
-`PLUGIN_DATA` is the absolute path to a host-managed persistent data directory for the plugin. This directory SHOULD survive plugin updates and reinstalls. The host SHOULD create the directory on first reference and MAY delete it when the plugin is uninstalled.
+`PLUGIN_DATA` is the absolute path to a host-managed persistent data directory dedicated to the plugin. The host MUST create the directory before launching a plugin subprocess, MUST make it writable to that subprocess, and MUST preserve its contents across plugin updates. The host MAY delete the directory when the plugin is uninstalled.
 
 Use `PLUGIN_DATA` for: installed dependencies (node_modules, virtual environments), generated code, caches, and other plugin state that should persist across updates. Use `PLUGIN_ROOT` for referencing bundled scripts, binaries, and config files that ship with the plugin.
 
@@ -720,19 +720,19 @@ PLUGIN_DATA=/home/alex/.agents/plugins/data/devtools
 
 ### 10.2 Placeholder expansion
 
-Hosts that provide `PLUGIN_ROOT` MUST expand `${PLUGIN_ROOT}` in supported configuration fields. Hosts that provide a persistent data directory SHOULD expand `${PLUGIN_DATA}`.
+Hosts that launch plugin subprocesses MUST expand `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` in supported configuration fields.
 
-Generic environment variable interpolation (e.g., `${HOME}`) is not required by this spec. Hosts MAY support it.
+Plugins claiming conformance MUST NOT require interpolation of variables other than `${PLUGIN_ROOT}` and `${PLUGIN_DATA}`. Hosts MAY support additional variables as host-specific behavior.
 
 Expansion applies to runtime configuration values — executable paths and environment-bearing strings — not to manifest discovery path fields. Manifest discovery paths (§6.4) are always relative `./` paths resolved from the plugin root.
 
 | Location                     | Fields                                                                                       | Description                                            |
 | ---------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| MCP config                   | `command`, `args`, `env`, `cwd`                                                              | All string values support plugin-root expansion.       |
+| MCP config                   | `command`, `args`, `env`, `cwd`                                                              | All string values support plugin variable expansion.   |
 
 Hosts MAY provide additional environment variables beyond the plugin root variables.
 
-Example: `${PLUGIN_ROOT}` expansion in MCP
+Example: plugin variable expansion in MCP
 
 ```json
 {
@@ -742,7 +742,7 @@ Example: `${PLUGIN_ROOT}` expansion in MCP
       "args": ["--config", "${PLUGIN_ROOT}/config/db.json"],
       "cwd": "${PLUGIN_ROOT}",
       "env": {
-        "DATA_DIR": "${PLUGIN_ROOT}/data"
+        "DATA_DIR": "${PLUGIN_DATA}/database"
       }
     }
   }
@@ -771,7 +771,7 @@ A host is conformant to Open Plugin v1 if it:
 2. Parses `plugin.json`.
 3. For each core component type it supports (skills, MCP servers), discovers components in default locations.
 4. Respects manifest-declared discovery paths for supported component types.
-5. If the host launches plugin subprocesses (e.g., MCP servers), expands `${PLUGIN_ROOT}` in runtime configuration values (`command`, `args`, `env`, `cwd`).
+5. If the host launches plugin subprocesses (e.g., MCP servers), provides `PLUGIN_ROOT` and `PLUGIN_DATA` and expands both variables in runtime configuration values (`command`, `args`, `env`, `cwd`).
 6. Supports at least one core component type (skills or MCP servers).
 
 Host-specific behavior should be represented by namespaced extension fields in `plugin.json`. This keeps the plugin package inspectable through one canonical manifest while allowing implementations to experiment independently.
@@ -826,7 +826,8 @@ A host is not required to support every component type. Incremental adoption is 
 ### Environment and expansion
 
 - [ ] If the host launches plugin subprocesses, provide `PLUGIN_ROOT` environment variable ([§10.1](#101-required-variables))
-- [ ] If the host provides `PLUGIN_ROOT`, expand `${PLUGIN_ROOT}` in MCP server `command`, `args`, `env`, `cwd` fields ([§10.2](#102-placeholder-expansion))
+- [ ] If the host launches plugin subprocesses, provide a dedicated writable `PLUGIN_DATA` directory ([§10.1.1](#1011-persistent-data-directory))
+- [ ] Expand `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` in MCP server `command`, `args`, `env`, `cwd` fields ([§10.2](#102-placeholder-expansion))
 
 ### Resilience
 
@@ -873,9 +874,9 @@ Every conformant host MUST check `plugin.json` at the plugin root ([§5.1](#51-m
 
 One manifest avoids scattering plugin configuration across multiple directories and makes it easier for authors, hosts, and reviewers to see which fields are shared and which fields are implementation-specific. Top-level extension objects provide room for host-specific experimentation without creating competing manifest precedence rules.
 
-### Why `${PLUGIN_ROOT}` over relative paths in configs?
+### Why plugin variables over relative paths in configs?
 
-Hook commands, MCP server arguments, and LSP configurations often need absolute paths at runtime. Relative paths from the config file location would be ambiguous when configs are loaded from different directories. `${PLUGIN_ROOT}` provides an unambiguous, host-resolved anchor that works regardless of the current working directory.
+Hook commands, MCP server arguments, and LSP configurations often need absolute paths at runtime. `${PLUGIN_ROOT}` provides an unambiguous, host-resolved anchor for bundled files regardless of the current working directory. `${PLUGIN_DATA}` separately identifies host-managed writable state that persists when package contents are replaced during an update.
 
 ### Why optional-component failures are non-fatal
 
