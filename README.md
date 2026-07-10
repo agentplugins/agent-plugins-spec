@@ -127,63 +127,27 @@ These containment rules govern access to files supplied by the plugin package. T
 
 ### 4.2 Standard layout
 
+A plugin that uses both portable component types and a client extension can have the following layout:
+
 ```text
 my-plugin/
 ├── plugin.json
 ├── skills/
-├── mcp.json
-├── .client-name/
-├── LICENSE
-└── CHANGELOG.md
-```
-
-Example: Core Profile layout (minimal)
-
-```text
-code-assistant/
-├── plugin.json
-├── skills/
 │   └── summarize/
-│       └── SKILL.md
-└── mcp.json
-```
-
-Example: plugin with both v1 component types
-
-```text
-devtools/
-├── plugin.json
-├── skills/
-│   └── code-review/
 │       ├── SKILL.md
 │       ├── scripts/
 │       │   └── analyze.sh
 │       └── references/
 │           └── checklist.md
 ├── mcp.json
+├── .client-name/
 ├── LICENSE
 └── CHANGELOG.md
 ```
 
 <!-- DISCUSSION: standard-layout-extensions — Should the standard layout include additional well-known directories such as `tests/` or `docs/`? -->
 
-> **See also:** [§5 Manifest and client extensions](#5-manifest-and-client-extensions) for manifest and client namespace rules, and [§7 Component discovery](#7-component-discovery) for how component directories are scanned.
-
-### 4.3 Directory rules
-
-1. The manifest file MUST be named `plugin.json` and live at the plugin root.
-2. Component directories such as `skills/`, when present, MUST exist at the plugin root.
-3. Missing component directories are not errors.
-
-Example:
-
-```text
-my-plugin/
-├── plugin.json
-└── skills/
-    └── summarize/
-        └── SKILL.md
-```
+> **See also:** [§5 Manifest and client extensions](#5-manifest-and-client-extensions) for manifest and client namespace rules, and [§7 Component discovery](#7-component-discovery) for fixed component locations and missing-location behavior.
 
 ## 5. Manifest and client extensions
 
@@ -192,18 +156,6 @@ my-plugin/
 Hosts MUST check for a manifest at `plugin.json` in the plugin root.
 
 The Open Plugin core specification defines exactly one portable manifest per plugin. No other file can replace, supplement, or override the core fields in root `plugin.json`.
-
-| Path          | Description             | Notes                                  |
-| ------------- | ----------------------- | -------------------------------------- |
-| `plugin.json` | Portable manifest | REQUIRED. Lives at the plugin root.    |
-
-Example:
-
-```text
-my-plugin/
-├── plugin.json
-└── skills/summarize/SKILL.md
-```
 
 A host loads and validates root `plugin.json` before discovering components or applying client-specific behavior.
 
