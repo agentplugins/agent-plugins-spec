@@ -326,10 +326,12 @@ Hosts MAY store content hashes, resolved commit SHAs, signatures, or other integ
 | `author`      | object   | Author object with optional `name`, `email`, and `url` string fields. |
 | `homepage`    | string   | Documentation or homepage URL.                                        |
 | `repository`  | string   | Source repository URL.                                                |
-| `license`     | string   | SPDX license identifier.                                              |
+| `license`     | string   | License identifier (SPDX identifier RECOMMENDED).                     |
 | `keywords`    | string[] | Search and discovery tags.                                            |
 
 The `author` object MAY contain only the `name`, `email`, and `url` fields, each with a string value. Any other field or value type makes the manifest invalid.
+
+Except where this specification states an explicit constraint, metadata fields are validated only by their JSON types. Hosts MUST NOT reject a manifest solely because `version` is not valid Semantic Versioning; `homepage`, `repository`, or `author.url` is not a recognized URL; `author.email` is not a recognized email address; or `license` is not an SPDX identifier.
 
 ### 6.4 Plugin name constraints
 
