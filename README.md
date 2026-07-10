@@ -324,12 +324,12 @@ Example: a skill directory named `deploy` inside `skills/`:
 
 ```text
 skills/
-  deploy/
-    SKILL.md          # name: deploy
-    scripts/
-      rollback.sh
-    references/
-      runbook.md
+└── deploy/
+    ├── SKILL.md          # name: deploy
+    ├── scripts/
+    │   └── rollback.sh
+    └── references/
+        └── runbook.md
 ```
 
 ### 7.2 MCP servers
