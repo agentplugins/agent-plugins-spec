@@ -356,6 +356,8 @@ Each server configuration MUST contain a `type` field and match exactly one of t
 
 The `command` field MUST contain a single executable token, not a shell command string. It MUST be either a bare executable name or a plugin-relative path beginning with `./`. Hosts MUST resolve bare names using the platform's executable search rules and MUST resolve plugin-relative paths against the plugin root. Hosts MUST NOT perform placeholder expansion in `command`.
 
+Whether a configured `PATH` environment value participates in resolving a bare `command` is host-defined. Plugins claiming conformance MUST NOT depend on that behavior. A plugin that bundles an executable in the package MUST use a plugin-relative `command`.
+
 Hosts MAY use a platform-specific command interpreter when required to launch the resolved executable, such as a `.bat` or `.cmd` script on Windows, but MUST preserve `command` as one token and pass `args` separately.
 
 When `cwd` is omitted, hosts MUST use the plugin root as the subprocess working directory. When present, `cwd` MUST have one of these forms:
@@ -441,13 +443,17 @@ A client MAY use a top-level `.<client>/` directory for client-specific content.
 
 > **See also:** [§7.2 MCP servers](#72-mcp-servers) for the fields where plugin variable expansion applies, and [§4.1 General requirements](#41-general-requirements) for path safety rules.
 
-### 9.1 Required variables
+### 9.1 Subprocess environment
 
 Hosts that launch plugin subprocesses (i.e., stdio MCP servers) MUST provide `PLUGIN_ROOT` and `PLUGIN_DATA` in each subprocess environment. `PLUGIN_ROOT` is the absolute path to the filesystem-resolved plugin root. `PLUGIN_DATA` is the absolute path to a host-managed persistent data directory dedicated to that installed plugin instance.
 
 The host chooses the `PLUGIN_DATA` location. It MUST create the directory before launching a plugin subprocess, MUST make it writable to that subprocess, and MUST preserve its contents across plugin updates. The host MAY delete the directory when the plugin is uninstalled.
 
 Use `PLUGIN_DATA` for: installed dependencies (node_modules, virtual environments), generated code, caches, and other plugin state that should persist across updates. Use `PLUGIN_ROOT` for referencing bundled scripts, binaries, and config files that ship with the plugin.
+
+The host chooses the base subprocess environment and MAY inherit, omit, or sanitize ambient variables. After placeholder expansion, entries in a stdio server's `env` object MUST overlay the base environment and replace same-name entries according to platform environment-name semantics. The host MUST supply `PLUGIN_ROOT` and `PLUGIN_DATA` as defined above.
+
+Except for the platform executable search used to resolve a bare `command`, plugins claiming conformance MUST NOT depend on a base-environment variable unless this specification requires that variable or the server configuration supplies it explicitly.
 
 Example: a host loading the plugin `devtools` from `/home/alex/.agents/plugins/devtools` sets:
 
@@ -465,8 +471,6 @@ Expansion applies to every string element of `args`, every string value in `env`
 Unrecognized placeholder-like text MUST remain literal. Plugins claiming conformance MUST NOT depend on interpolation of placeholders other than `${PLUGIN_ROOT}` and `${PLUGIN_DATA}`.
 
 An MCP server's `env` object MUST NOT contain entries named `PLUGIN_ROOT` or `PLUGIN_DATA`. Such an entry makes that server configuration invalid under §7.2.2. Hosts MUST supply the reserved environment variables themselves.
-
-Hosts MAY provide additional environment variables beyond `PLUGIN_ROOT` and `PLUGIN_DATA`.
 
 Example: plugin variable expansion in MCP
 
@@ -555,10 +559,12 @@ A host is not required to support every core component type. For example, a skil
 
 ### Environment and expansion
 
-- [ ] If the host launches plugin subprocesses, provide `PLUGIN_ROOT` and a dedicated writable `PLUGIN_DATA` directory ([§9.1](#91-required-variables))
+- [ ] If the host launches plugin subprocesses, provide `PLUGIN_ROOT` and a dedicated writable `PLUGIN_DATA` directory ([§9.1](#91-subprocess-environment))
 - [ ] Resolve MCP server `command` as a single bare or plugin-relative executable token ([§7.2.1](#721-discovery-and-configuration))
 - [ ] Use the plugin root as the default MCP server working directory ([§7.2.1](#721-discovery-and-configuration))
 - [ ] Validate explicit `cwd` forms and post-resolution containment ([§7.2.1](#721-discovery-and-configuration))
+- [ ] Overlay configured `env` entries on a host-selected base environment ([§9.1](#91-subprocess-environment))
+- [ ] Do not require configured `PATH` to affect bare-command resolution ([§7.2.1](#721-discovery-and-configuration))
 - [ ] Expand `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` in MCP server `args`, `env`, and `cwd` fields ([§9.2](#92-placeholder-expansion))
 
 ### Resilience
@@ -600,7 +606,7 @@ Existing hosts use incompatible MCP configuration shapes and infer transports di
 
 ### Why plugin variables over relative paths in configs?
 
-MCP server arguments often need absolute paths at runtime. `${PLUGIN_ROOT}` provides an unambiguous, host-resolved anchor for bundled files, while `${PLUGIN_DATA}` identifies host-managed writable state that persists when package contents are replaced during an update. The `command` field does not use interpolation: a `./` path is resolved directly against the plugin root, and a bare name uses the platform's executable search rules. Treating `command` as one token avoids requiring hosts to parse and escape user-authored shell command strings.
+MCP server arguments often need absolute paths at runtime. `${PLUGIN_ROOT}` provides an unambiguous, host-resolved anchor for bundled files, while `${PLUGIN_DATA}` identifies host-managed writable state that persists when package contents are replaced during an update. The `command` field does not use interpolation: a `./` path is resolved directly against the plugin root, and a bare name uses the platform's executable search rules. Treating `command` as one token avoids requiring hosts to parse and escape user-authored shell command strings. Hosts differ in inherited environment and `PATH` behavior, so Open Plugin standardizes configured environment overrides but leaves bare-command search host-defined; plugin-relative commands provide deterministic bundled execution.
 
 ### Why component failures are non-fatal
 
