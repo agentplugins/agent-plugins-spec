@@ -59,7 +59,6 @@ A host that supports skills can load this plugin by reading `plugin.json`, disco
 **Appendices (not required for conformance)**
 
 - [Appendix A: Conformance Checklist](#appendix-a-conformance-checklist)
-- [Appendix B: Marketplace Indexes](#appendix-b-marketplace-indexes)
 - [Appendix C: Extended Hook Events](#appendix-c-extended-hook-events)
 - [Appendix D: Extended Component Types](#appendix-d-extended-component-types)
 - [Design Decisions](#design-decisions)
@@ -84,6 +83,8 @@ The governance process should define:
 5. Neutral stewardship of public assets such as `openplugins.org` once the committee is formed.
 
 Vendor-specific experimentation is expected. The committee's role is to identify extensions that have proven useful across implementations and decide when they should become portable core behavior.
+
+The Project's governance rules are defined in the [Technical Charter](./GOVERNANCE.md).
 
 ## 2. Conformance language
 
@@ -994,97 +995,6 @@ No test harness or validation tool is specified. A future version may define:
 - A `test` manifest field or convention
 - A standard plugin linter or validator command
 - Conformance test suites for host implementations
-
----
-
-## Appendix B: Marketplace Indexes
-
-*This appendix is not required for v1 conformance. Marketplaces, registries, sharing URLs, and organization catalogs are implementation details outside the core plugin package specification. This appendix records one possible indexing mechanism used by some hosts, but plugins remain valid without any marketplace file.*
-
-### B.1 Marketplace discovery order
-
-Hosts that support marketplaces may define their own marketplace discovery rules. One existing pattern is to search for `marketplace.json` at the marketplace root:
-
-| Path               | Description              |
-| ------------------ | ------------------------ |
-| `marketplace.json` | Marketplace root index.  |
-
-The Open Plugin core specification does not require hosts to search for marketplace indexes and does not define marketplace conformance.
-
-### B.2 Marketplace schema
-
-Required fields:
-
-| Field     | Type   | Description                        |
-| --------- | ------ | ---------------------------------- |
-| `name`    | string | Marketplace identifier.            |
-| `plugins` | array  | Non-empty array of plugin entries. |
-
-Optional fields:
-
-| Field                 | Type   | Description                                                   |
-| --------------------- | ------ | ------------------------------------------------------------- |
-| `owner`               | object | Marketplace owner with `name` and optional `email` and `url`. |
-| `metadata`            | object | Marketplace-level metadata.                                   |
-| `metadata.pluginRoot` | string | Base path for plugin `source` resolution. Defaults to `.`.    |
-
-### B.3 Plugin entries
-
-| Field         | Type     | Description                                                                                  |
-| ------------- | -------- | -------------------------------------------------------------------------------------------- |
-| `name`        | string   | Required plugin name. Must satisfy plugin name constraints.                                  |
-| `source`      | string   | Required relative path from `metadata.pluginRoot` or marketplace root. Must start with `./`. |
-| `description` | string   | Optional marketplace description override.                                                   |
-| `version`     | string   | Optional marketplace version override for update checks.                                     |
-| `author`      | object   | Optional marketplace author override.                                                        |
-| `license`     | string   | Optional marketplace license override.                                                       |
-| `keywords`    | string[] | Optional marketplace keywords override.                                                      |
-| `skills`      | string[] | Optional explicit skill paths relative to the marketplace root.                              |
-
-For marketplace-level operations such as display, search, and update checks, plugin-entry metadata overrides manifest metadata. Runtime plugin behavior continues to use the plugin manifest and plugin contents.
-
-Example:
-
-```json
-{
-  "name": "acme-plugins",
-  "owner": { "name": "Acme Corp", "url": "https://acme.example.com" },
-  "metadata": { "pluginRoot": "./plugins" },
-  "plugins": [
-    {
-      "name": "code-review",
-      "source": "./code-review",
-      "description": "Automated code review with security checks.",
-      "version": "2.1.0",
-      "keywords": ["review", "security"]
-    },
-    {
-      "name": "deploy-tools",
-      "source": "./deploy-tools",
-      "version": "1.0.3",
-      "license": "Apache-2.0"
-    }
-  ]
-}
-```
-
-### B.4 `pluginRoot` resolution
-
-`metadata.pluginRoot` defines the base directory for resolving each plugin entry `source`. If omitted, `source` is resolved relative to the directory containing `marketplace.json`.
-
-### B.5 Fallback scanning without an index
-
-If no marketplace index is found, hosts should check whether the root directory itself is a plugin, scan immediate subdirectories, and scan one additional level deep.
-
-### B.6 Marketplace name derivation
-
-| Source                        | Derived name                         |
-| ----------------------------- | ------------------------------------ |
-| GitHub shorthand `owner/repo` | `owner-repo`                         |
-| Git URL                       | Last two path segments joined by `-` |
-| Local directory path          | Directory basename                   |
-
----
 
 ## Appendix C: Extended Hook Events
 
