@@ -145,8 +145,6 @@ my-plugin/
 └── CHANGELOG.md
 ```
 
-<!-- DISCUSSION: standard-layout-extensions — Should the standard layout include additional well-known directories such as `tests/` or `docs/`? -->
-
 > **See also:** [§5 Manifest and client extensions](#5-manifest-and-client-extensions) for manifest and client namespace rules, and [§7 Component discovery](#7-component-discovery) for fixed component locations and missing-location behavior.
 
 ## 5. Manifest and client extensions
@@ -523,7 +521,7 @@ A host is not required to support every component type. Incremental adoption is 
 - [ ] Validate required `id` and `name` fields ([§6.2](#62-required-fields))
 - [ ] Validate plugin name against naming constraints ([§6.4](#64-plugin-name-constraints))
 - [ ] Reject unknown `plugin.json` fields ([§6.1](#61-manifest-object))
-- [ ] Reject paths that escape the plugin root via `../` ([§4.1](#41-general-requirements))
+- [ ] Reject package paths that resolve outside the plugin root ([§4.1](#41-general-requirements))
 - [ ] Ignore unsupported `.<client>/` directories ([§5.2](#52-client-extension-directories))
 
 ### Component discovery
@@ -544,21 +542,6 @@ A host is not required to support every component type. Incremental adoption is 
 - [ ] Ignore unsupported component types ([§11.3](#113-unsupported-components-and-failures))
 - [ ] Continue loading when an independent component fails ([§11.3](#113-unsupported-components-and-failures))
 - [ ] Support at least one core component type ([§11.1](#111-minimum-host-requirements))
-
-### Diagnostics matrix
-
-*This table consolidates the failure-handling behaviors defined throughout the spec into a single reference. All behaviors listed below restate existing requirements — no new requirements are introduced. Host implementers can use this matrix to verify that their diagnostic output covers every specified failure site.*
-
-<!-- DISCUSSION: diagnostics-contract -->
-
-| Decision point | Existing spec behavior | Human-readable example | JSON example | Fatal? | Verification |
-| --- | --- | --- | --- | --- | --- |
-| Unknown manifest field | Hosts MUST reject a plugin whose root manifest contains a field outside the closed schema ([§6.1](#61-manifest-object)) | `ERROR open-plugin: manifest field "openai" is not permitted; plugin rejected` | `{"level":"error","event":"open_plugin.manifest.unknown_field","field":"openai","action":"rejected"}` | Yes | Check that no plugin components are discovered or executed |
-| Missing or invalid required field | Hosts MUST reject a plugin whose `id` or `name` is missing or invalid and MUST NOT discover or execute its components ([§6.2](#62-required-fields)) | `ERROR open-plugin: manifest is invalid: required field "id" is missing; plugin rejected` | `{"level":"error","event":"open_plugin.manifest.invalid_required_field","field":"id","reason":"missing","action":"rejected"}` | Yes | Check that no plugin components are discovered or executed |
-| MCP server startup failure | If a server fails to start, the host SHOULD log the error and continue loading other components ([§8.2.2](#822-loading-rules)) | `ERROR open-plugin: plugin "devtools" MCP server "database" failed to start: connection refused on port 5432. Other plugin components remain available.` | `{"level":"error","event":"open_plugin.mcp.start_failed","plugin":"devtools","server":"database","error":"connection refused on port 5432","action":"continue_without_mcp"}` | No | Check that other components still load |
-| Partial host support | Hosts MAY report a partially unsupported plugin ([§11.3](#113-unsupported-components-and-failures)) | `WARN open-plugin: plugin "devtools" is partially supported: this host supports skills but not MCP servers` | `{"level":"warn","event":"open_plugin.host.partial_support","plugin":"devtools","supported":["skills"],"unsupported":["mcpServers"],"action":"loaded_partial"}` | No | Check that supported components are functional |
-
-> **Implementer note:** The `event` field values above (e.g., `open_plugin.manifest.invalid_required_field`) are *suggested* stable identifiers — not required by this spec. Hosts that adopt them gain a machine-readable diagnostic surface that agents, CI pipelines, and plugin validators can consume deterministically. The recommended fields for every diagnostic record are: `level`, `event`, `plugin` (plugin name), the relevant component identifier (e.g., `server` or `field`), and `action` (what the host did in response).
 
 ---
 
@@ -593,8 +576,6 @@ MCP server arguments often need absolute paths at runtime. `${PLUGIN_ROOT}` prov
 ### Why component failures are non-fatal
 
 When an MCP server fails to start, the host continues loading the plugin's remaining components ([§11.3](#113-unsupported-components-and-failures)). A plugin that provides skills and an MCP server should not become entirely unusable because the server's runtime dependency is missing or its port is occupied. The spec pairs non-fatal component failures with diagnostic requirements so that failures are visible rather than silent.
-
-<!-- DISCUSSION: diagnostics-contract -->
 
 ---
 
@@ -640,7 +621,7 @@ Organizations deploying plugins at scale need policy enforcement that v1.0.0 doe
 
 ### Audit-trail standardization
 
-v1.0.0 defines diagnostic events for failure sites but does not standardize lifecycle audit events. A future version may define:
+v1.0.0 defines failure-reporting requirements but does not standardize diagnostic or lifecycle event schemas. A future version may define:
 
 - A standard event schema for plugin install, enable, disable, update, and uninstall actions
 - Recommended fields: timestamp, actor (user or automation), plugin name, plugin version, action, outcome
