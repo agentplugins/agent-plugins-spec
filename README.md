@@ -595,7 +595,7 @@ Hosts MUST ignore component types they do not support.
 
 ### 8.1 Skills
 
-Agent Skills follow the [Agent Skills specification](https://agentskills.io/specification). The Agent Skills spec is the source of truth for the `SKILL.md` format, frontmatter fields, and directory layout (`scripts/`, `references/`, `assets/`).
+Agent Skills MUST conform to the [Agent Skills specification](https://agentskills.io/specification). That specification is the source of truth for the `SKILL.md` format, frontmatter fields, and directory layout (`scripts/`, `references/`, `assets/`).
 
 This specification defines how Agent Skills are *discovered* and *namespaced* within a plugin, not the skill format itself.
 
