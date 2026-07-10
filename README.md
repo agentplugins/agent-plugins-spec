@@ -177,6 +177,17 @@ If `plugin.json` contains any other top-level field, the manifest is invalid. Ho
 
 Every permitted field MUST match the type and constraints defined below. Any schema violation makes the manifest invalid and requires the same rejection behavior.
 
+Example: minimal manifest
+
+```json
+{
+  "id": "https://github.com/example/minimal-plugin/tree/main",
+  "name": "minimal-plugin"
+}
+```
+
+Example: full manifest
+
 ```json
 {
   "id": "https://github.com/example/plugin/tree/main",
@@ -192,33 +203,6 @@ Every permitted field MUST match the type and constraints defined below. Any sch
   "repository": "https://github.com/example/plugin",
   "license": "MIT",
   "keywords": ["keyword1", "keyword2"]
-}
-```
-
-Example: minimal manifest
-
-```json
-{
-  "id": "https://github.com/example/minimal-plugin/tree/main",
-  "name": "minimal-plugin",
-  "version": "1.0.0",
-  "description": "The simplest possible plugin."
-}
-```
-
-Example: full manifest
-
-```json
-{
-  "id": "https://github.com/open-plugin-examples/devtools/tree/main",
-  "name": "devtools",
-  "version": "2.0.0",
-  "description": "Full-featured development toolkit.",
-  "author": {
-    "name": "Open Plugin Examples"
-  },
-  "license": "Apache-2.0",
-  "keywords": ["devtools", "code-review", "linting", "security"]
 }
 ```
 
