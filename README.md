@@ -47,7 +47,7 @@ A host that supports skills can load this plugin by reading `plugin.json`, disco
 2. [Conformance language](#2-conformance-language)
 3. [Terminology](#3-terminology)
 4. [Plugin package model](#4-plugin-package-model)
-5. [Manifest location and extension fields](#5-manifest-location-and-extension-fields)
+5. [Manifest and client extensions](#5-manifest-and-client-extensions)
 6. [Manifest schema](#6-manifest-schema)
 7. [Component discovery](#7-component-discovery)
 8. [Component definitions](#8-component-definitions)
@@ -76,11 +76,11 @@ The governance process should define:
 
 1. A steering committee with one primary representative per participating implementation or vendor.
 2. A lightweight quorum and voting process for accepting changes to the core specification.
-3. A process for promoting widely adopted vendor extensions into the core specification.
+3. A process for promoting widely adopted client extensions into the core specification.
 4. A shared collaboration space for implementers, initially kept small enough to move quickly.
 5. Neutral stewardship of public assets such as `openplugins.org` once the committee is formed.
 
-Vendor-specific experimentation is expected. The committee's role is to identify extensions that have proven useful across implementations and decide when they should become portable core behavior.
+Client-specific experimentation is expected. The committee's role is to identify extensions that have proven useful across implementations and decide when they should become portable core behavior.
 
 The Project's governance rules are defined in the [Technical Charter](./GOVERNANCE.md).
 
@@ -97,7 +97,7 @@ The key words MUST, MUST NOT, REQUIRED, SHOULD, SHOULD NOT, RECOMMENDED, MAY, an
 | Manifest           | Metadata document          | A `plugin.json` file at the plugin root.                                                                                                    |
 | Component          | Plugin-provided capability | A skill or MCP server configuration.                                                                                                         |
 | Host               | Plugin runtime             | A tool that discovers, installs, loads, and executes plugin components.                                                                      |
-| Vendor extension   | Namespaced field           | A top-level manifest object reserved for one implementation, vendor, or host family.                                                         |
+| Client namespace   | Extension directory        | A dot-prefixed top-level directory containing behavior owned by one client.                                                                  |
 
 ## 4. Plugin package model
 
@@ -145,6 +145,7 @@ my-plugin/
 ├── plugin.json
 ├── skills/
 ├── mcp.json
+├── .client-name/
 ├── LICENSE
 └── CHANGELOG.md
 ```
@@ -179,7 +180,7 @@ devtools/
 
 <!-- DISCUSSION: standard-layout-extensions — Should the standard layout include additional well-known directories such as `tests/` or `docs/`? -->
 
-> **See also:** [§5 Manifest location and extension fields](#5-manifest-location-and-extension-fields) for manifest location and vendor extension rules, and [§7 Component discovery](#7-component-discovery) for how component directories are scanned.
+> **See also:** [§5 Manifest and client extensions](#5-manifest-and-client-extensions) for manifest and client namespace rules, and [§7 Component discovery](#7-component-discovery) for how component directories are scanned.
 
 ### 4.3 Directory rules
 
@@ -197,17 +198,17 @@ my-plugin/
         └── SKILL.md
 ```
 
-## 5. Manifest location and extension fields
+## 5. Manifest and client extensions
 
 ### 5.1 Manifest location
 
 Hosts MUST check for a manifest at `plugin.json` in the plugin root.
 
-The Open Plugin core specification defines one manifest file per plugin. Host-specific behavior SHOULD be expressed through namespaced top-level fields inside `plugin.json`, not by adding additional manifest files or vendor-prefixed manifest directories.
+The Open Plugin core specification defines exactly one portable manifest per plugin. No other file can replace, supplement, or override the core fields in root `plugin.json`.
 
 | Path          | Description             | Notes                                  |
 | ------------- | ----------------------- | -------------------------------------- |
-| `plugin.json` | Vendor-neutral manifest | REQUIRED. Lives at the plugin root.    |
+| `plugin.json` | Portable manifest | REQUIRED. Lives at the plugin root.    |
 
 Example:
 
@@ -217,53 +218,48 @@ my-plugin/
 └── skills/summarize/SKILL.md
 ```
 
-A host selects `plugin.json` and then applies any extension fields it understands.
+A host loads and validates root `plugin.json` before discovering components or applying client-specific behavior.
 
 > **See also:** [§6 Manifest schema](#6-manifest-schema) for the structure of the manifest file, and [§12 Host conformance](#12-host-conformance) for requirements around supporting `plugin.json`.
 
-### 5.2 Vendor extension fields
+### 5.2 Client extension directories
 
-Implementations MAY define namespaced top-level manifest fields for behavior that is not part of the core specification.
+A client MAY define capabilities, configuration, metadata, and portable-component overrides inside a top-level `.<client>/` directory.
 
-1. Extension fields SHOULD be top-level objects.
-2. Extension field names SHOULD identify the implementation, vendor, host family, or standards group that owns the extension.
-3. Hosts MUST ignore extension fields they do not understand.
-4. Extension fields MUST NOT redefine the semantics of core fields.
-5. Extensions that become useful across implementations SHOULD be proposed for promotion into the core specification through the governance process.
+1. Client-specific content MUST live inside the namespace owned by that client and MUST NOT add fields to root `plugin.json`.
+2. Hosts MUST ignore client namespaces they do not implement.
+3. Client namespace contents do not affect Open Plugin conformance.
+4. A client MAY define how content in its namespace supplements or overrides portable components. Those semantics are owned by the client and are outside this specification.
+5. A portable component remains the fallback for hosts that do not implement a corresponding client namespace override.
+6. Top-level paths not defined by Open Plugin v1 MUST NOT be interpreted as portable component types.
 
-Example:
+Example: client-specific progressive enhancement
 
-```json
-{
-  "id": "https://github.com/acme/devtools/tree/main",
-  "name": "devtools",
-  "version": "2.0.0",
-  "openai": {
-    "sharing": {
-      "workspaceInstall": true
-    }
-  },
-  "vscode": {
-    "activationEvents": ["onLanguage:typescript"]
-  }
-}
+```text
+task-plugin/
+├── plugin.json
+├── skills/
+│   └── schedule-task/
+│       └── SKILL.md
+└── .codex/
+    └── skills/
+        └── schedule-task/
+            └── SKILL.md
 ```
 
-> **Implementer note:**
-> Example user-facing message: `Plugin "devtools": ignoring unsupported extension field "vscode".`
->
-> Example machine-readable record:
-> ```json
-> {"level":"info","event":"open_plugin.manifest.unsupported_extension","plugin":"devtools","field":"vscode","action":"ignored"}
-> ```
+All conformant skills hosts can load `skills/schedule-task/SKILL.md`. Codex may additionally define the `.codex/skills/schedule-task/SKILL.md` file as an override. Other hosts ignore `.codex/`.
 
 ## 6. Manifest schema
 
-> **See also:** [§5 Manifest location and extension fields](#5-manifest-location-and-extension-fields) for where the manifest is loaded from, and [§7 Component discovery](#7-component-discovery) for the fixed component locations.
+> **See also:** [§5 Manifest and client extensions](#5-manifest-and-client-extensions) for where the manifest is loaded from and where client-specific content belongs, and [§7 Component discovery](#7-component-discovery) for the fixed component locations.
 
 ### 6.1 Manifest object
 
-The manifest MUST be JSON and MUST contain a top-level object.
+The manifest MUST be JSON and MUST contain a top-level object. Its schema is closed: the only permitted top-level fields are `id`, `name`, `version`, `description`, `author`, `homepage`, `repository`, `license`, and `keywords`.
+
+If `plugin.json` contains any other top-level field, the manifest is invalid. Hosts MUST reject the plugin and MUST NOT discover or execute any of its components. Hosts SHOULD report each unsupported field. Client-specific fields belong under `.<client>/` as defined in §5.2.
+
+Every permitted field MUST match the type and constraints defined below. Any schema violation makes the manifest invalid and requires the same rejection behavior.
 
 ```json
 {
@@ -350,6 +346,8 @@ Hosts MAY store content hashes, resolved commit SHAs, signatures, or other integ
 | `repository`  | string   | Source repository URL.                                                |
 | `license`     | string   | SPDX license identifier.                                              |
 | `keywords`    | string[] | Search and discovery tags.                                            |
+
+The `author` object MAY contain only the `name`, `email`, and `url` fields, each with a string value. Any other field or value type makes the manifest invalid.
 
 ### 6.4 Plugin name constraints
 
@@ -581,23 +579,25 @@ Hosts MAY use `version` to determine whether updates are available and whether c
 A host is conformant to Open Plugin v1 if it:
 
 1. Can load a plugin from a directory path.
-2. Parses `plugin.json`.
-3. For each core component type it supports, discovers components in its fixed location.
-4. If the host launches plugin subprocesses (i.e., MCP servers), provides `PLUGIN_ROOT` and `PLUGIN_DATA` and expands both variables in runtime configuration values (`args`, `env`, `cwd`).
-5. For MCP servers, resolves `command` as a single executable token and uses the plugin root as the default subprocess working directory.
-6. Supports at least one core component type (skills or MCP servers).
+2. Parses and validates the closed `plugin.json` schema.
+3. Ignores client extension directories it does not implement.
+4. For each core component type it supports, discovers components in its fixed location.
+5. If the host launches plugin subprocesses (i.e., MCP servers), provides `PLUGIN_ROOT` and `PLUGIN_DATA` and expands both variables in runtime configuration values (`args`, `env`, `cwd`).
+6. For MCP servers, resolves `command` as a single executable token and uses the plugin root as the default subprocess working directory.
+7. Supports at least one core component type (skills or MCP servers).
 
-Host-specific behavior should be represented by namespaced extension fields in `plugin.json`. This keeps the plugin package inspectable through one canonical manifest while allowing implementations to experiment independently.
+Client-specific behavior MUST be represented under `.<client>/`, not in root `plugin.json`. This preserves one strict portable manifest while allowing clients to experiment independently.
 
 Example: a skills-only host is conformant. It only needs to:
 
 ```text
 1. Accept a plugin directory path.
-2. Read plugin.json for the plugin id and name.
-3. Scan `skills/` for `SKILL.md` files.
+2. Read and validate `plugin.json`.
+3. Ignore unsupported client extension directories.
+4. Scan `skills/` for `SKILL.md` files.
 ```
 
-A host that only supports skills and ignores MCP servers is fully conformant to Open Plugin v1 as long as it meets all six requirements above.
+A host that only supports skills and ignores MCP servers is fully conformant to Open Plugin v1 as long as it meets all seven requirements above.
 
 ### 12.2 Incremental adoption
 
@@ -617,11 +617,12 @@ A host is not required to support every component type. Incremental adoption is 
 
 ### Plugin loader
 
-- [ ] Parse `plugin.json` ([§5.1](#51-manifest-location))
+- [ ] Parse and validate `plugin.json` ([§5.1](#51-manifest-location), [§6.1](#61-manifest-object))
 - [ ] Validate required `id` and `name` fields ([§6.2](#62-required-fields))
 - [ ] Validate plugin name against naming constraints ([§6.4](#64-plugin-name-constraints))
+- [ ] Reject unknown `plugin.json` fields ([§6.1](#61-manifest-object))
 - [ ] Reject paths that escape the plugin root via `../` ([§4.1](#41-general-requirements))
-- [ ] Ignore unsupported vendor extension fields ([§5.2](#52-vendor-extension-fields))
+- [ ] Ignore unsupported `.<client>/` directories ([§5.2](#52-client-extension-directories))
 
 ### Component discovery
 
@@ -654,7 +655,7 @@ A host is not required to support every component type. Incremental adoption is 
 
 | Decision point | Existing spec behavior | Human-readable example | JSON example | Fatal? | Verification |
 | --- | --- | --- | --- | --- | --- |
-| Unsupported extension field | Hosts MUST ignore extension fields they do not understand ([§5.2](#52-vendor-extension-fields)) | `INFO open-plugin: plugin "devtools" declares unsupported extension field "vscode"; ignored` | `{"level":"info","event":"open_plugin.manifest.unsupported_extension","plugin":"devtools","field":"vscode","action":"ignored"}` | No | Check that core fields and supported extensions still load |
+| Unknown manifest field | Hosts MUST reject a plugin whose root manifest contains a field outside the closed schema ([§6.1](#61-manifest-object)) | `ERROR open-plugin: manifest field "openai" is not permitted; plugin rejected` | `{"level":"error","event":"open_plugin.manifest.unknown_field","field":"openai","action":"rejected"}` | Yes | Check that no plugin components are discovered or executed |
 | Missing or invalid required field | Hosts MUST reject a plugin whose `id` or `name` is missing or invalid and MUST NOT discover or execute its components ([§6.2](#62-required-fields)) | `ERROR open-plugin: manifest is invalid: required field "id" is missing; plugin rejected` | `{"level":"error","event":"open_plugin.manifest.invalid_required_field","field":"id","reason":"missing","action":"rejected"}` | Yes | Check that no plugin components are discovered or executed |
 | MCP server startup failure | If a server fails to start, the host SHOULD log the error and continue loading other components ([§8.2.2](#822-loading-rules)) | `ERROR open-plugin: plugin "devtools" MCP server "database" failed to start: connection refused on port 5432. Other plugin components remain available.` | `{"level":"error","event":"open_plugin.mcp.start_failed","plugin":"devtools","server":"database","error":"connection refused on port 5432","action":"continue_without_mcp"}` | No | Check that other components still load |
 | Partial host support | Hosts SHOULD warn when configuration is invalid, conflicting, or partially unsupported ([§12.3](#123-unsupported-components-and-failures)) | `WARN open-plugin: plugin "devtools" is partially supported: this host supports skills but not MCP servers` | `{"level":"warn","event":"open_plugin.host.partial_support","plugin":"devtools","supported":["skills"],"unsupported":["mcpServers"],"action":"loaded_partial"}` | No | Check that supported components are functional |
@@ -681,11 +682,15 @@ The `plugin-name:component-name` format was chosen because colons are visually d
 
 ### Why root-level `plugin.json` is the conformance floor
 
-Every conformant host MUST check `plugin.json` at the plugin root ([§5.1](#51-manifest-location)). This gives plugin authors a single guaranteed file that works across all hosts without vendor-specific path knowledge. Vendor-specific behavior belongs in namespaced extension fields, so custom behavior is visible in the same manifest as the portable core fields.
+Every conformant host MUST check `plugin.json` at the plugin root ([§5.1](#51-manifest-location)). This gives plugin authors a single guaranteed manifest that works across all hosts without client-specific path knowledge. Client-specific behavior belongs under `.<client>/`, leaving the root manifest portable.
 
-### Why one manifest instead of per-vendor files?
+### Why a closed portable manifest?
 
-One manifest avoids scattering plugin configuration across multiple directories and makes it easier for authors, hosts, and reviewers to see which fields are shared and which fields are implementation-specific. Top-level extension objects provide room for host-specific experimentation without creating competing manifest precedence rules.
+Restricting root `plugin.json` to known portable fields enables strict validation, typo detection, and schema-driven key completion. It also prevents client experiments from claiming top-level names that a future Open Plugin version may need.
+
+### Why dot-prefixed client directories?
+
+The dot prefix creates a visible namespace boundary: unprefixed standard locations belong to Open Plugin, while `.<client>/` belongs to one client. Keeping client-specific capabilities outside `plugin.json` preserves the closed schema and prevents client-specific top-level component directories from colliding with future portable component types.
 
 ### Why plugin variables over relative paths in configs?
 
