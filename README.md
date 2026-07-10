@@ -125,7 +125,15 @@ Example: valid and invalid relative paths
 
 The first example is valid — both paths start with `./` and stay within the plugin root. The second is invalid — `../bin/server` escapes the plugin root and `data` is not a plugin-relative path.
 
-These containment rules govern access to files supplied by the plugin package. They do not sandbox a plugin subprocess or restrict paths supplied at runtime, including the host-managed `PLUGIN_DATA` directory defined in §9.1.
+These containment rules govern access to files supplied by the plugin package. They do not sandbox a plugin subprocess or restrict paths supplied at runtime. §7.2.1 separately defines containment for a configured working directory rooted in the host-managed `PLUGIN_DATA` directory.
+
+When a path fails a containment requirement, the host MUST apply the narrowest applicable failure boundary:
+
+1. If `plugin.json` does not resolve within the plugin root, the host MUST reject the plugin.
+2. If a fixed component location does not resolve within the plugin root, the host MUST treat that component type as invalid under §6.2.
+3. If a discovered `SKILL.md` does not resolve within the plugin root, the host MUST skip that skill under §7.1.
+4. If an MCP server `command` or `cwd` fails containment, the host MUST treat that server entry as invalid under §7.2.2.
+5. For any other package path that resolves outside the plugin root, the host MUST deny access to that path.
 
 ### 4.2 Standard layout
 
@@ -362,7 +370,15 @@ Each server configuration MUST contain a `type` field and match exactly one of t
 
 The `command` field MUST contain a single executable token, not a shell command string. It MUST be either a bare executable name or a plugin-relative path beginning with `./`. Hosts MUST resolve bare names using the platform's executable search rules and MUST resolve plugin-relative paths against the plugin root. Hosts MUST NOT perform placeholder expansion in `command`.
 
-Hosts MAY use a platform-specific command interpreter when required to launch the resolved executable, such as a `.bat` or `.cmd` script on Windows, but MUST preserve `command` as one token and pass `args` separately. When `cwd` is omitted, hosts MUST use the plugin root as the subprocess working directory.
+Hosts MAY use a platform-specific command interpreter when required to launch the resolved executable, such as a `.bat` or `.cmd` script on Windows, but MUST preserve `command` as one token and pass `args` separately.
+
+When `cwd` is omitted, hosts MUST use the plugin root as the subprocess working directory. When present, `cwd` MUST have one of these forms:
+
+1. A plugin-relative path beginning with `./`.
+2. Exactly `${PLUGIN_ROOT}` or a path beginning with `${PLUGIN_ROOT}/`.
+3. Exactly `${PLUGIN_DATA}` or a path beginning with `${PLUGIN_DATA}/`.
+
+Hosts MUST expand placeholders before resolving `cwd`. A plugin-relative or `${PLUGIN_ROOT}`-rooted value MUST remain within the filesystem-resolved plugin root. A `${PLUGIN_DATA}`-rooted value MUST remain within the filesystem-resolved plugin data directory. Any other form or any post-resolution escape makes that server entry invalid under §7.2.2.
 
 The `args`, `env`, and `cwd` fields in a stdio server configuration MUST support `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` expansion.
 
@@ -556,6 +572,7 @@ A host is not required to support every core component type. For example, a skil
 - [ ] If the host launches plugin subprocesses, provide `PLUGIN_ROOT` and a dedicated writable `PLUGIN_DATA` directory ([§9.1](#91-required-variables))
 - [ ] Resolve MCP server `command` as a single bare or plugin-relative executable token ([§7.2.1](#721-discovery-and-configuration))
 - [ ] Use the plugin root as the default MCP server working directory ([§7.2.1](#721-discovery-and-configuration))
+- [ ] Validate explicit `cwd` forms and post-resolution containment ([§7.2.1](#721-discovery-and-configuration))
 - [ ] Expand `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` in MCP server `args`, `env`, and `cwd` fields ([§9.2](#92-placeholder-expansion))
 
 ### Resilience
