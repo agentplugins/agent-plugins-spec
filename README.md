@@ -114,7 +114,8 @@ The key words MUST, MUST NOT, REQUIRED, SHOULD, SHOULD NOT, RECOMMENDED, MAY, an
 4. All relative paths declared by the plugin MUST be interpreted relative to the plugin root.
 5. All relative paths declared by the plugin MUST start with `./`.
 6. A plugin MUST NOT reference files outside its own directory tree by using `../` traversal.
-7. Hosts MUST reject any configured path that escapes the plugin root after path normalization.
+7. Hosts MUST reject any configured path that escapes the plugin root after lexical path normalization or filesystem resolution.
+8. When resolving a configured path, hosts MUST treat the filesystem-resolved plugin root as the containment boundary. Symlinks, junctions, reparse points, and equivalent filesystem mechanisms MAY resolve to targets within that boundary, but hosts MUST reject paths that resolve outside it.
 
 Example: valid and invalid relative paths
 
