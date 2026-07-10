@@ -103,6 +103,7 @@ Example: valid and invalid relative paths
 {
   "mcpServers": {
     "server": {
+      "type": "stdio",
       "command": "./bin/server",
       "cwd": "./data"
     }
@@ -114,6 +115,7 @@ Example: valid and invalid relative paths
 {
   "mcpServers": {
     "server": {
+      "type": "stdio",
       "command": "../bin/server",
       "cwd": "data"
     }
@@ -352,37 +354,78 @@ skills/
 
 ### 8.2 MCP servers
 
-MCP server configuration follows the [Model Context Protocol specification](https://modelcontextprotocol.io/specification). The MCP spec is the source of truth for server configuration fields, transport types (stdio, HTTP/SSE), and lifecycle semantics.
-
-This specification defines how MCP servers are *discovered* within a plugin and how `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` expansion applies to configuration values.
+The [Model Context Protocol specification](https://modelcontextprotocol.io/specification) defines MCP wire behavior and lifecycle semantics. Open Plugin defines the `mcp.json` configuration format used to locate and connect to MCP servers in a plugin. Hosts map this portable format to their native configuration; its field names and values need not match a host-native format.
 
 #### 8.2.1 Discovery and configuration
 
 The MCP configuration path is `mcp.json` at the plugin root. MCP configuration MUST NOT be declared inline in `plugin.json` or loaded from any alternative core path.
 
-The configuration MUST contain a top-level `mcpServers` object. Each key is the server name and MUST be unique within `mcp.json`.
+`mcp.json` MUST be a JSON object containing exactly one field, `mcpServers`. `mcpServers` MUST be an object whose member names identify servers and whose member values are server configuration objects. An empty `mcpServers` object is valid.
+
+Each server configuration MUST contain a `type` field and match exactly one of the closed variants below. An unknown field, an unknown `type` value, or a field belonging to another variant makes that server entry invalid.
+
+##### stdio
+
+| Field     | Type              | Required | Description                                      |
+| --------- | ----------------- | -------- | ------------------------------------------------ |
+| `type`    | `"stdio"`         | Yes      | Selects the MCP stdio transport.                 |
+| `command` | string            | Yes      | Executable token to launch.                      |
+| `args`    | string[]          | No       | Arguments passed to the executable.              |
+| `env`     | object of strings | No       | Environment variables supplied to the process.   |
+| `cwd`     | string            | No       | Working directory for the process.               |
 
 The `command` field MUST contain a single executable token, not a shell command string. It MUST be either a bare executable name or a plugin-relative path beginning with `./`. Hosts MUST resolve bare names using the platform's executable search rules and MUST resolve plugin-relative paths against the plugin root. Hosts MUST NOT perform placeholder expansion in `command`.
 
 Hosts MAY use a platform-specific command interpreter when required to launch the resolved executable, such as a `.bat` or `.cmd` script on Windows, but MUST preserve `command` as one token and pass `args` separately. When `cwd` is omitted, hosts MUST use the plugin root as the subprocess working directory.
 
-The `args`, `env`, and `cwd` fields in MCP server configuration MUST support `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` expansion.
+The `args`, `env`, and `cwd` fields in a stdio server configuration MUST support `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` expansion.
+
+##### Streamable HTTP and legacy HTTP+SSE
+
+| Field     | Type                          | Required | Description                                                       |
+| --------- | ----------------------------- | -------- | ----------------------------------------------------------------- |
+| `type`    | `"streamable-http"` or `"sse"` | Yes      | Selects the remote MCP transport.                                 |
+| `url`     | string                        | Yes      | MCP endpoint URL.                                                 |
+| `headers` | object of strings             | No       | Fixed HTTP headers sent when connecting to the configured origin. |
+
+`streamable-http` selects the current MCP Streamable HTTP transport. `sse` selects the deprecated HTTP+SSE transport defined by the [MCP 2024-11-05 specification](https://modelcontextprotocol.io/specification/2024-11-05/basic/transports); it does not refer to SSE responses or streams used within Streamable HTTP.
+
+The `url` value MUST be an absolute HTTP or HTTPS URL and MUST NOT contain user information or a fragment. Non-loopback endpoints MUST use HTTPS. HTTP MAY be used when the URL host is exactly `localhost` or an IP literal in a loopback range.
+
+Header names and values MUST be valid HTTP header fields. Header names are case-insensitive; an entry containing the same header name more than once under different casing is invalid. Hosts MUST NOT perform placeholder or environment-variable expansion in `url`, header names, or header values.
+
+Header values are visible package data, not a portable secret mechanism. Plugins MUST NOT embed credentials or other secrets in `headers`. Headers generated by the host to implement HTTP, MCP, or authorization take precedence over configured headers with the same case-insensitive name. A host MUST NOT forward configured headers to a different origin through a redirect or legacy SSE endpoint event without explicit user authorization.
+
+Open Plugin v1 defines no OAuth configuration or portable credential-reference fields. Authorization discovery, user interaction, and credential storage are host-managed. An authorization failure is a connection failure for that server, not invalid plugin configuration.
+
+##### Transport support
+
+A host that supports Open Plugin MCP servers MUST support both `stdio` and `streamable-http`. Support for `sse` is OPTIONAL. A host MUST use the transport declared by `type` and MUST NOT reinterpret `streamable-http` as legacy HTTP+SSE or automatically fall back to it.
 
 Example: `mcp.json`
 
 ```json
 {
   "mcpServers": {
-    "database": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+    "local-validator": {
+      "type": "stdio",
+      "command": "./bin/validator",
+      "args": ["--data", "${PLUGIN_DATA}/validator"],
       "env": {
-        "POSTGRES_URL": "postgresql://localhost:5432/mydb"
+        "CONFIG": "${PLUGIN_ROOT}/config.json"
+      },
+      "cwd": "${PLUGIN_ROOT}"
+    },
+    "deployment-api": {
+      "type": "streamable-http",
+      "url": "https://deploy.example.com/mcp",
+      "headers": {
+        "X-Tenant": "public-tenant"
       }
     },
-    "filesystem": {
-      "command": "./bin/fs-server",
-      "args": ["--root", "${PLUGIN_DATA}/filesystem"]
+    "legacy-events": {
+      "type": "sse",
+      "url": "https://legacy.example.com/sse"
     }
   }
 }
@@ -391,9 +434,10 @@ Example: `mcp.json`
 #### 8.2.2 Loading rules
 
 1. Hosts that support MCP servers MUST load configuration only from `mcp.json` at the plugin root.
-2. If `mcp.json` is not valid JSON, does not contain a top-level object, or does not contain the required `mcpServers` object, the host MUST disable MCP for that plugin and continue loading other component types. The host SHOULD report the invalid configuration.
+2. If `mcp.json` is not valid JSON or does not satisfy the top-level requirements in §8.2.1, the host MUST disable MCP for that plugin and continue loading other component types. The host SHOULD report the invalid configuration.
 3. If an individual server entry does not satisfy the requirements in §8.2.1, the host MUST skip that server and continue loading other servers and component types. The host SHOULD report the invalid entry.
-4. If a server fails to start, the host MUST continue loading other servers and component types. The host SHOULD report the startup failure.
+4. If the host does not support a valid `sse` entry, it MUST skip that server and continue loading other servers and component types. The host SHOULD report the unsupported transport.
+5. If a server fails to start, connect, authenticate, or complete the MCP handshake, the host MUST continue loading other servers and component types. The host SHOULD report the connection failure.
 
 ## 9. Environment variables and placeholder expansion
 
@@ -401,7 +445,7 @@ Example: `mcp.json`
 
 ### 9.1 Required variables
 
-Hosts that launch plugin subprocesses (i.e., MCP servers) MUST provide `PLUGIN_ROOT` and `PLUGIN_DATA` in each subprocess environment. `PLUGIN_ROOT` is the absolute path to the filesystem-resolved plugin root. `PLUGIN_DATA` is the absolute path to a host-managed persistent data directory dedicated to that installed plugin instance.
+Hosts that launch plugin subprocesses (i.e., stdio MCP servers) MUST provide `PLUGIN_ROOT` and `PLUGIN_DATA` in each subprocess environment. `PLUGIN_ROOT` is the absolute path to the filesystem-resolved plugin root. `PLUGIN_DATA` is the absolute path to a host-managed persistent data directory dedicated to that installed plugin instance.
 
 The host chooses the `PLUGIN_DATA` location. It MUST create the directory before launching a plugin subprocess, MUST make it writable to that subprocess, and MUST preserve its contents across plugin updates. The host MAY delete the directory when the plugin is uninstalled.
 
@@ -432,6 +476,7 @@ Example: plugin variable expansion in MCP
 {
   "mcpServers": {
     "database": {
+      "type": "stdio",
       "command": "npx",
       "args": ["--config", "${PLUGIN_ROOT}/config/db.json"],
       "cwd": "${PLUGIN_ROOT}",
@@ -465,9 +510,10 @@ A host is conformant to Open Plugin v1 if it:
 2. Parses and validates the closed `plugin.json` schema.
 3. Ignores client extension directories it does not implement.
 4. For each core component type it supports, discovers components in its fixed location.
-5. If the host launches plugin subprocesses (i.e., MCP servers), provides `PLUGIN_ROOT` and `PLUGIN_DATA` and expands both variables in runtime configuration values (`args`, `env`, `cwd`).
-6. For MCP servers, resolves `command` as a single executable token and uses the plugin root as the default subprocess working directory.
-7. Supports at least one core component type (skills or MCP servers).
+5. If it supports MCP servers, supports both the `stdio` and `streamable-http` variants in `mcp.json`.
+6. If the host launches plugin subprocesses (i.e., stdio MCP servers), provides `PLUGIN_ROOT` and `PLUGIN_DATA` and expands both variables in runtime configuration values (`args`, `env`, `cwd`).
+7. For stdio MCP servers, resolves `command` as a single executable token and uses the plugin root as the default subprocess working directory.
+8. Supports at least one core component type (skills or MCP servers).
 
 Client-specific behavior MUST be represented under `.<client>/`, not in root `plugin.json`. This preserves one strict portable manifest while allowing clients to experiment independently.
 
@@ -480,7 +526,7 @@ Example: a skills-only host is conformant. It only needs to:
 4. Scan `skills/` for `SKILL.md` files.
 ```
 
-A host that only supports skills and ignores MCP servers is fully conformant to Open Plugin v1 as long as it meets all seven requirements above.
+A host that only supports skills and ignores MCP servers is fully conformant to Open Plugin v1 as long as it meets all eight requirements above.
 
 ### 11.2 Incremental adoption
 
@@ -513,6 +559,13 @@ A host is not required to support every component type. Incremental adoption is 
 - [ ] Scan the fixed location for each supported component type ([§7.1](#71-fixed-locations))
 - [ ] Ignore missing fixed locations without error ([§7.2](#72-missing-locations))
 
+### MCP configuration
+
+- [ ] Validate the closed `mcp.json` schema and each server variant ([§8.2.1](#821-discovery-and-configuration))
+- [ ] If supporting MCP, implement both stdio and Streamable HTTP ([§8.2.1](#transport-support))
+- [ ] Treat legacy HTTP+SSE as optional and never as an automatic fallback ([§8.2.1](#transport-support))
+- [ ] Enforce remote URL and literal-header requirements ([§8.2.1](#streamable-http-and-legacy-httpsse))
+
 ### Environment and expansion
 
 - [ ] If the host launches plugin subprocesses, provide `PLUGIN_ROOT` and a dedicated writable `PLUGIN_DATA` directory ([§9.1](#91-required-variables))
@@ -523,6 +576,7 @@ A host is not required to support every component type. Incremental adoption is 
 ### Resilience
 
 - [ ] Ignore unsupported component types ([§11.3](#113-unsupported-components-and-failures))
+- [ ] Skip unsupported legacy HTTP+SSE servers without affecting other components ([§8.2.2](#822-loading-rules))
 - [ ] Continue loading when an independent component fails ([§11.3](#113-unsupported-components-and-failures))
 - [ ] Support at least one core component type ([§11.1](#111-minimum-host-requirements))
 
@@ -552,13 +606,17 @@ Restricting root `plugin.json` to known portable fields enables strict validatio
 
 The dot prefix creates a visible namespace boundary: unprefixed standard locations belong to Open Plugin, while `.<client>/` belongs to one client. Keeping client-specific capabilities outside `plugin.json` preserves the closed schema and prevents client-specific top-level component directories from colliding with future portable component types.
 
+### Why an explicit MCP configuration format?
+
+Existing hosts use incompatible MCP configuration shapes and infer transports differently. Open Plugin therefore defines an explicit closed union whose meaning is independent of any host-native format. Distinguishing Streamable HTTP from legacy HTTP+SSE also prevents an unexpected fallback to the deprecated transport.
+
 ### Why plugin variables over relative paths in configs?
 
 MCP server arguments often need absolute paths at runtime. `${PLUGIN_ROOT}` provides an unambiguous, host-resolved anchor for bundled files, while `${PLUGIN_DATA}` identifies host-managed writable state that persists when package contents are replaced during an update. The `command` field does not use interpolation: a `./` path is resolved directly against the plugin root, and a bare name uses the platform's executable search rules. Treating `command` as one token avoids requiring hosts to parse and escape user-authored shell command strings.
 
 ### Why component failures are non-fatal
 
-When an MCP server fails to start, the host continues loading the plugin's remaining components ([§11.3](#113-unsupported-components-and-failures)). A plugin that provides skills and an MCP server should not become entirely unusable because the server's runtime dependency is missing or its port is occupied. The spec pairs non-fatal component failures with diagnostic requirements so that failures are visible rather than silent.
+When an MCP server fails to start or connect, the host continues loading the plugin's remaining components ([§11.3](#113-unsupported-components-and-failures)). A plugin that provides skills and an MCP server should not become entirely unusable because one server is unavailable. The spec pairs non-fatal component failures with diagnostic requirements so that failures are visible rather than silent.
 
 ---
 
