@@ -658,8 +658,6 @@ Example: `.mcp.json`
 
 ## 9. Namespacing
 
-<!-- DISCUSSION: namespacing-separator — The colon separator `plugin:component` was chosen over `/` and `__` for general components. Should MCP tool namespacing also use colons, or does underscore-based `mcp__plugin_...` remain necessary for model compatibility? -->
-
 > **See also:** [§6.7 Plugin name constraints](#67-plugin-name-constraints) for allowed characters in plugin names, and [§8 Component definitions](#8-component-definitions) for the naming rules of each component type.
 
 ### 9.1 General component namespacing
@@ -678,21 +676,9 @@ deploy-tools:status
 
 ### 9.2 MCP tool identifier namespacing
 
-When surfacing MCP tools to a model, hosts SHOULD include both the plugin name and the server name to avoid collisions.
+MCP tool identifiers surfaced by a host are outside the Open Plugin package format and are not part of plugin or host conformance.
 
-The RECOMMENDED surfaced identifier format is:
-
-```text
-mcp__plugin_{plugin-name}_{server-name}__{tool-name}
-```
-
-Example:
-
-| Plugin         | Server     | Tool    | Identifier                                 |
-| -------------- | ---------- | ------- | ------------------------------------------ |
-| `deploy-tools` | `database` | `query` | `mcp__plugin_deploy-tools_database__query` |
-
-Hosts that use a different naming convention MAY adapt this format.
+Implementer note: A host that aggregates tools from multiple MCP servers may encounter duplicate tool names. The host should use a deterministic disambiguation strategy and retain an unambiguous mapping from each surfaced identifier to the originating plugin, server, and tool. Any transformed identifier should satisfy the tool-name constraints of the MCP version implemented by the host.
 
 Example: component namespacing
 
@@ -700,14 +686,6 @@ Example: component namespacing
 | --- | --- | --- |
 | `skills/code-review/SKILL.md` | `code-review` | `devtools:code-review` |
 | `skills/deploy/SKILL.md` | `deploy` | `devtools:deploy` |
-
-Example: MCP tool namespacing
-
-| Plugin | Server | Tool | Surfaced identifier |
-| --- | --- | --- | --- |
-| `devtools` | `database` | `query` | `mcp__plugin_devtools_database__query` |
-| `devtools` | `database` | `migrate` | `mcp__plugin_devtools_database__migrate` |
-| `deploy-tools` | `kubernetes` | `rollout_status` | `mcp__plugin_deploy-tools_kubernetes__rollout_status` |
 
 ## 10. Environment variables and placeholder expansion
 
@@ -844,7 +822,6 @@ A host is not required to support every component type. Incremental adoption is 
 ### Namespacing
 
 - [ ] SHOULD namespace components as `{plugin-name}:{component-name}` ([§9.1](#91-general-component-namespacing))
-- [ ] SHOULD include both plugin name and server name in MCP tool identifiers ([§9.2](#92-mcp-tool-identifier-namespacing))
 
 ### Environment and expansion
 
@@ -887,10 +864,6 @@ Plugins use filesystem directories as the package unit rather than archive forma
 ### Why colon-separated namespacing for components?
 
 The `plugin-name:component-name` format was chosen because colons are visually distinct, rarely appear in filenames, and align with existing conventions in tools like Claude Code's slash commands (`/plugin:command`). Alternatives considered included `/` (conflicts with filesystem paths) and `__` (less readable for user-facing identifiers).
-
-### Why underscore-based namespacing for MCP tools?
-
-MCP tool identifiers are consumed by language models, which may tokenize or interpret colons and slashes unpredictably. The `mcp__plugin_{plugin}_{server}__{tool}` format uses only characters that models handle reliably. The double-underscore separators provide unambiguous parsing boundaries even when plugin or tool names contain single underscores.
 
 ### Why root-level `plugin.json` is the conformance floor
 
