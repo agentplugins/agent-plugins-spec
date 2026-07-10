@@ -501,13 +501,13 @@ Hosts that launch plugin subprocesses (i.e., MCP servers) MUST provide an enviro
 
 ### 10.1.1 Persistent data directory
 
-Hosts that launch plugin subprocesses MUST provide a dedicated writable data directory for each plugin and expose its absolute path through `PLUGIN_DATA`.
+Hosts that launch plugin subprocesses MUST provide a dedicated writable data directory for each installed plugin instance and expose its absolute path through `PLUGIN_DATA`.
 
 | Variable      | Description                    | Notes                                             |
 | ------------- | ------------------------------ | ------------------------------------------------- |
 | `PLUGIN_DATA` | Persistent plugin data directory | REQUIRED for hosts that launch plugin subprocesses. |
 
-`PLUGIN_DATA` is the absolute path to a host-managed persistent data directory dedicated to the plugin. The host MUST create the directory before launching a plugin subprocess, MUST make it writable to that subprocess, and MUST preserve its contents across plugin updates. The host MAY delete the directory when the plugin is uninstalled.
+`PLUGIN_DATA` is the absolute path to a host-managed persistent data directory dedicated to that installed plugin instance. The host chooses its location. The host MUST create the directory before launching a plugin subprocess, MUST make it writable to that subprocess, and MUST preserve its contents across plugin updates. The host MAY delete the directory when the plugin is uninstalled.
 
 Use `PLUGIN_DATA` for: installed dependencies (node_modules, virtual environments), generated code, caches, and other plugin state that should persist across updates. Use `PLUGIN_ROOT` for referencing bundled scripts, binaries, and config files that ship with the plugin.
 
@@ -520,17 +520,19 @@ PLUGIN_DATA=/home/alex/.agents/plugins/data/devtools
 
 ### 10.2 Placeholder expansion
 
-Hosts that launch plugin subprocesses MUST expand `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` in supported configuration fields.
+Hosts that launch plugin subprocesses MUST expand `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` in supported configuration fields. Expansion is a single, non-recursive textual replacement of every exact occurrence of either placeholder. Text introduced by a replacement MUST NOT be scanned for further placeholders.
 
-Plugins claiming conformance MUST NOT require interpolation of variables other than `${PLUGIN_ROOT}` and `${PLUGIN_DATA}`. Hosts MAY support additional variables as host-specific behavior.
+Expansion applies to every string element of `args`, every string value in `env`, and the `cwd` string. It does not apply to `env` keys, `command`, or fixed component locations.
 
-Expansion applies to runtime arguments, environment-bearing strings, and explicit working directories, not to `command` or fixed component locations.
+Unrecognized placeholder-like text MUST remain literal. Plugins claiming conformance MUST NOT depend on interpolation of placeholders other than `${PLUGIN_ROOT}` and `${PLUGIN_DATA}`.
+
+An MCP server's `env` object MUST NOT contain entries named `PLUGIN_ROOT` or `PLUGIN_DATA`. Such an entry makes that server configuration invalid under §8.2.2. Hosts MUST supply the reserved environment variables themselves.
 
 | Location                     | Fields                                                                                       | Description                                            |
 | ---------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
 | MCP config                   | `args`, `env`, `cwd`                                                                         | All string values support plugin variable expansion.   |
 
-Hosts MAY provide additional environment variables beyond the plugin root variables.
+Hosts MAY provide additional environment variables beyond `PLUGIN_ROOT` and `PLUGIN_DATA`.
 
 Example: plugin variable expansion in MCP
 
