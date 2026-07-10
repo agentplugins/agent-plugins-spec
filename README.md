@@ -626,7 +626,11 @@ The default MCP configuration path is `.mcp.json`. MCP servers MAY also be decla
 
 The configuration MUST contain a top-level `mcpServers` object. Each key is the server name and MUST be unique within the plugin after source resolution.
 
-The `command`, `args`, `env`, and `cwd` fields in MCP server configuration MUST support `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` expansion.
+The `command` field MUST contain a single executable token, not a shell command string. It MUST be either a bare executable name or a plugin-relative path beginning with `./`. Hosts MUST resolve bare names using the platform's executable search rules and MUST resolve plugin-relative paths against the plugin root. Hosts MUST NOT perform placeholder expansion in `command`.
+
+Hosts MAY use a platform-specific command interpreter when required to launch the resolved executable, such as a `.bat` or `.cmd` script on Windows, but MUST preserve `command` as one token and pass `args` separately. When `cwd` is omitted, hosts MUST use the plugin root as the subprocess working directory.
+
+The `args`, `env`, and `cwd` fields in MCP server configuration MUST support `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` expansion.
 
 Example: `.mcp.json`
 
@@ -641,9 +645,8 @@ Example: `.mcp.json`
       }
     },
     "filesystem": {
-      "command": "${PLUGIN_ROOT}/bin/fs-server",
-      "args": ["--root", "${PLUGIN_ROOT}/data"],
-      "cwd": "${PLUGIN_ROOT}"
+      "command": "./bin/fs-server",
+      "args": ["--root", "${PLUGIN_DATA}/filesystem"]
     }
   }
 }
@@ -725,11 +728,11 @@ Hosts that launch plugin subprocesses MUST expand `${PLUGIN_ROOT}` and `${PLUGIN
 
 Plugins claiming conformance MUST NOT require interpolation of variables other than `${PLUGIN_ROOT}` and `${PLUGIN_DATA}`. Hosts MAY support additional variables as host-specific behavior.
 
-Expansion applies to runtime configuration values — executable paths and environment-bearing strings — not to manifest discovery path fields. Manifest discovery paths (§6.4) are always relative `./` paths resolved from the plugin root.
+Expansion applies to runtime arguments, environment-bearing strings, and explicit working directories, not to `command` or manifest discovery path fields. Manifest discovery paths (§6.4) are always relative `./` paths resolved from the plugin root.
 
 | Location                     | Fields                                                                                       | Description                                            |
 | ---------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| MCP config                   | `command`, `args`, `env`, `cwd`                                                              | All string values support plugin variable expansion.   |
+| MCP config                   | `args`, `env`, `cwd`                                                                         | All string values support plugin variable expansion.   |
 
 Hosts MAY provide additional environment variables beyond the plugin root variables.
 
@@ -772,8 +775,9 @@ A host is conformant to Open Plugin v1 if it:
 2. Parses `plugin.json`.
 3. For each core component type it supports (skills, MCP servers), discovers components in default locations.
 4. Respects manifest-declared discovery paths for supported component types.
-5. If the host launches plugin subprocesses (e.g., MCP servers), provides `PLUGIN_ROOT` and `PLUGIN_DATA` and expands both variables in runtime configuration values (`command`, `args`, `env`, `cwd`).
-6. Supports at least one core component type (skills or MCP servers).
+5. If the host launches plugin subprocesses (e.g., MCP servers), provides `PLUGIN_ROOT` and `PLUGIN_DATA` and expands both variables in runtime configuration values (`args`, `env`, `cwd`).
+6. For MCP servers, resolves `command` as a single executable token and uses the plugin root as the default subprocess working directory.
+7. Supports at least one core component type (skills or MCP servers).
 
 Host-specific behavior should be represented by namespaced extension fields in `plugin.json`. This keeps the plugin package inspectable through one canonical manifest while allowing implementations to experiment independently.
 
@@ -786,7 +790,7 @@ Example: a skills-only host is conformant. It only needs to:
 4. Respect manifest-declared skill paths.
 ```
 
-A host that only supports skills — and ignores MCP servers, commands, agents, rules, hooks, LSP servers, and output styles — is fully conformant to Open Plugin v1 as long as it meets all six requirements above.
+A host that only supports skills — and ignores MCP servers, commands, agents, rules, hooks, LSP servers, and output styles — is fully conformant to Open Plugin v1 as long as it meets all seven requirements above.
 
 Support for extended component types (commands, agents, rules, hooks, LSP servers, output styles) is OPTIONAL. See [Appendix D: Extended Component Types](#appendix-d-extended-component-types).
 
@@ -828,7 +832,9 @@ A host is not required to support every component type. Incremental adoption is 
 
 - [ ] If the host launches plugin subprocesses, provide `PLUGIN_ROOT` environment variable ([§10.1](#101-required-variables))
 - [ ] If the host launches plugin subprocesses, provide a dedicated writable `PLUGIN_DATA` directory ([§10.1.1](#1011-persistent-data-directory))
-- [ ] Expand `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` in MCP server `command`, `args`, `env`, `cwd` fields ([§10.2](#102-placeholder-expansion))
+- [ ] Resolve MCP server `command` as a single bare or plugin-relative executable token ([§8.2.1](#821-discovery-and-configuration))
+- [ ] Use the plugin root as the default MCP server working directory ([§8.2.1](#821-discovery-and-configuration))
+- [ ] Expand `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` in MCP server `args`, `env`, and `cwd` fields ([§10.2](#102-placeholder-expansion))
 
 ### Resilience
 
@@ -878,7 +884,7 @@ One manifest avoids scattering plugin configuration across multiple directories 
 
 ### Why plugin variables over relative paths in configs?
 
-MCP server commands and arguments often need absolute paths at runtime. Relative paths from the config file location would be ambiguous when configs are loaded from different directories. `${PLUGIN_ROOT}` provides an unambiguous, host-resolved anchor for bundled files, while `${PLUGIN_DATA}` identifies host-managed writable state that persists when package contents are replaced during an update. Sections 8 and 10 require this behavior for MCP servers; Appendix D recommends analogous behavior for optional executable component types.
+MCP server arguments often need absolute paths at runtime. `${PLUGIN_ROOT}` provides an unambiguous, host-resolved anchor for bundled files, while `${PLUGIN_DATA}` identifies host-managed writable state that persists when package contents are replaced during an update. The `command` field does not use interpolation: a `./` path is resolved directly against the plugin root, and a bare name uses the platform's executable search rules. Treating `command` as one token avoids requiring hosts to parse and escape user-authored shell command strings. Sections 8 and 10 require this behavior for MCP servers; Appendix D recommends analogous behavior for optional executable component types.
 
 ### Why optional-component failures are non-fatal
 
@@ -1019,19 +1025,19 @@ The hook configuration contains a top-level `hooks` object. Each event key maps 
 
 Hook event names and payloads are host-defined in v1.
 
-Hook action types: `command` (shell command), `http` (POST to URL), `prompt` (LLM evaluation), `agent` (agentic verifier).
+Hook action types: `command` (executable), `http` (POST to URL), `prompt` (LLM evaluation), `agent` (agentic verifier).
 
-Hosts supporting `command` hook actions should provide `PLUGIN_ROOT` and `PLUGIN_DATA` and expand `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` in `command`, `args`, `env`, and `cwd` string values when those fields are present.
+Hosts supporting `command` hook actions should apply the command resolution and default working-directory behavior from §8.2.1. They should provide `PLUGIN_ROOT` and `PLUGIN_DATA` and expand `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` in `args`, `env`, and explicit `cwd` string values when those fields are present, but not in `command`.
 
 ### D.5 LSP servers
 
 The default LSP configuration path is `.lsp.json`. LSP servers MAY also be declared inline in the manifest `lspServers` field. The top-level object uses direct server-name keys.
 
-Required fields: `command` (executable on `$PATH`), `extensionToLanguage` (file extension to language ID mapping).
+Required fields: `command` (a bare executable name or plugin-relative `./` path), `extensionToLanguage` (file extension to language ID mapping).
 
-Optional fields: `args`, `transport`, `env`, `initializationOptions`, `settings`, `workspaceFolder`, `startupTimeout`, `shutdownTimeout`, `restartOnCrash`, `maxRestarts`.
+Optional fields: `args`, `cwd`, `transport`, `env`, `initializationOptions`, `settings`, `workspaceFolder`, `startupTimeout`, `shutdownTimeout`, `restartOnCrash`, `maxRestarts`.
 
-Hosts supporting LSP servers should provide `PLUGIN_ROOT` and `PLUGIN_DATA` and expand `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` in `command`, `args`, `env`, and `workspaceFolder` string values.
+Hosts supporting LSP servers should apply the command resolution and default working-directory behavior from §8.2.1. They should provide `PLUGIN_ROOT` and `PLUGIN_DATA` and expand `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` in `args`, `cwd`, `env`, and `workspaceFolder` string values, but not in `command`.
 
 ### D.6 Output styles
 
