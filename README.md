@@ -215,7 +215,7 @@ Example: full manifest
 
 The `id` value MUST be non-empty. If `id` or `name` is missing, has the wrong type, is empty, or otherwise violates its requirements, the manifest is invalid. Hosts MUST reject the plugin and MUST NOT discover or execute any of its components. Hosts SHOULD report which required field is invalid.
 
-The `id` field is intended for provenance, attribution, policy, and update tracking. The simplest portable form is the canonical URL where the plugin can be retrieved, such as a GitHub repository path or a cloud-hosted plugin URL.
+The simplest portable form of `id` is the canonical URL where the plugin can be retrieved, such as a GitHub repository path or a cloud-hosted plugin URL.
 
 Examples:
 
