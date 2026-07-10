@@ -636,14 +636,6 @@ Plugins currently cannot declare dependencies on other plugins. A future version
 - Resolution order and conflict handling for transitive dependencies
 - Peer dependency semantics for shared components
 
-### Binary distribution
-
-v1.0.0 assumes plugins are source-distributable (scripts, markdown, JSON configs). A future version may address:
-
-- Precompiled binary distribution for MCP servers
-- Platform-specific binary selection
-- Integrity verification for binary artifacts
-
 ### Plugin testing and validation
 
 No test harness or validation tool is specified. A future version may define:
