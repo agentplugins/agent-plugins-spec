@@ -20,6 +20,7 @@ hello-plugin/
 
 ```json
 {
+  "$schema": "https://open-plugins.com/schemas/1.0.0/plugin.schema.json",
   "id": "https://github.com/example/hello-plugin/tree/main",
   "name": "hello-plugin"
 }
@@ -103,6 +104,7 @@ Example: valid and invalid relative paths
 
 ```json
 {
+  "$schema": "https://open-plugins.com/schemas/1.0.0/mcp.schema.json",
   "mcpServers": {
     "server": {
       "type": "stdio",
@@ -115,6 +117,7 @@ Example: valid and invalid relative paths
 
 ```json
 {
+  "$schema": "https://open-plugins.com/schemas/1.0.0/mcp.schema.json",
   "mcpServers": {
     "server": {
       "type": "stdio",
@@ -173,16 +176,23 @@ A host loads and validates root `plugin.json` before discovering components or a
 
 ### 5.2 Manifest object
 
-The manifest MUST be JSON and MUST contain a top-level object. Its schema is closed: the only permitted top-level fields are `id`, `name`, `version`, `description`, `author`, `homepage`, `repository`, `license`, and `keywords`.
+The manifest MUST be JSON and MUST contain a top-level object. Its schema is closed: the only permitted top-level fields are `$schema`, `id`, `name`, `version`, `description`, `author`, `homepage`, `repository`, `license`, and `keywords`.
 
 If `plugin.json` contains any other top-level field, the manifest is invalid. Hosts MUST reject the plugin and MUST NOT discover or execute any of its components. Hosts SHOULD report each unsupported field. Client-specific fields belong under `.<client>/` as defined in §8.
 
 Every permitted field MUST match the type and constraints defined below. Any schema violation makes the manifest invalid and requires the same rejection behavior.
 
+The official machine-readable schema is [`schemas/1.0.0/plugin.schema.json`](./schemas/1.0.0/plugin.schema.json). The specification text is authoritative if it conflicts with the schema.
+
+The required `$schema` field identifies the Open Plugin specification version targeted by the plugin and its corresponding manifest schema. For Open Plugin 1.0.0, its value MUST be the canonical identifier `https://open-plugins.com/schemas/1.0.0/plugin.schema.json`.
+
+Hosts MUST use a recognized `$schema` value to select locally supported manifest validation and interpretation rules. A host MAY map multiple canonical identifiers to the same implementation only when it explicitly recognizes those Open Plugin versions as compatible. Hosts MUST NOT retrieve a schema while loading a plugin. If a host does not support the declared Open Plugin version or an explicitly recognized compatible version, it MUST reject the plugin and SHOULD report the unsupported version.
+
 Example: minimal manifest
 
 ```json
 {
+  "$schema": "https://open-plugins.com/schemas/1.0.0/plugin.schema.json",
   "id": "https://github.com/example/minimal-plugin/tree/main",
   "name": "minimal-plugin"
 }
@@ -192,6 +202,7 @@ Example: full manifest
 
 ```json
 {
+  "$schema": "https://open-plugins.com/schemas/1.0.0/plugin.schema.json",
   "id": "https://github.com/example/plugin/tree/main",
   "name": "plugin-name",
   "version": "1.2.0",
@@ -210,12 +221,13 @@ Example: full manifest
 
 ### 5.3 Required fields
 
-| Field  | Type   | Description                                                      |
-| ------ | ------ | ---------------------------------------------------------------- |
-| `id`   | string | Durable plugin identifier. SHOULD be a URL for the canonical plugin location. |
-| `name` | string | Human-readable plugin identifier. |
+| Field     | Type   | Description                                                      |
+| --------- | ------ | ---------------------------------------------------------------- |
+| `$schema` | string | Canonical plugin manifest schema identifier defined in §5.2.     |
+| `id`      | string | Durable plugin identifier. SHOULD be a URL for the canonical plugin location. |
+| `name`    | string | Human-readable plugin identifier.                                |
 
-The `id` value MUST be non-empty. If `id` or `name` is missing, has the wrong type, is empty, or otherwise violates its requirements, the manifest is invalid. Hosts MUST reject the plugin and MUST NOT discover or execute any of its components. Hosts SHOULD report which required field is invalid.
+The `id` value MUST be non-empty. If a required field is missing, has the wrong type, is empty, or otherwise violates its requirements, the manifest is invalid. Hosts MUST reject the plugin and MUST NOT discover or execute any of its components. Hosts SHOULD report which required field is invalid.
 
 The simplest portable form of `id` is the canonical URL where the plugin can be retrieved, such as a GitHub repository path or a cloud-hosted plugin URL.
 
@@ -223,6 +235,7 @@ Examples:
 
 ```json
 {
+  "$schema": "https://open-plugins.com/schemas/1.0.0/plugin.schema.json",
   "id": "https://github.com/acme/agent-plugins/tree/main/plugins/devtools",
   "name": "devtools"
 }
@@ -230,6 +243,7 @@ Examples:
 
 ```json
 {
+  "$schema": "https://open-plugins.com/schemas/1.0.0/plugin.schema.json",
   "id": "https://plugins.example.com/acme/devtools",
   "name": "devtools"
 }
@@ -340,7 +354,13 @@ The [Model Context Protocol specification](https://modelcontextprotocol.io/speci
 
 The MCP configuration path is `mcp.json` at the plugin root. MCP configuration MUST NOT be declared inline in `plugin.json` or loaded from any alternative core path.
 
-`mcp.json` MUST be a JSON object containing exactly one field, `mcpServers`. `mcpServers` MUST be an object whose member names identify servers and whose member values are server configuration objects. An empty `mcpServers` object is valid.
+`mcp.json` MUST be a JSON object containing the required `$schema` and `mcpServers` fields, with no other top-level fields. `mcpServers` MUST be an object whose member names identify servers and whose member values are server configuration objects. An empty `mcpServers` object is valid.
+
+The official machine-readable schema is [`schemas/1.0.0/mcp.schema.json`](./schemas/1.0.0/mcp.schema.json). The specification text is authoritative if it conflicts with the schema. The schema exposes `#/$defs/server` so that hosts can validate each server independently and preserve the failure boundaries in §7.2.2.
+
+The required `$schema` field identifies the Open Plugin specification version targeted by the MCP configuration and its corresponding MCP schema. For Open Plugin 1.0.0, its value MUST be the canonical identifier `https://open-plugins.com/schemas/1.0.0/mcp.schema.json`.
+
+Hosts MUST use a recognized `$schema` value to select locally supported MCP configuration validation and interpretation rules. A host MAY map multiple canonical identifiers to the same implementation only when it explicitly recognizes those Open Plugin versions as compatible. Hosts MUST NOT retrieve a schema while loading a plugin.
 
 Each server configuration MUST contain a `type` field and match exactly one of the closed variants below. An unknown field, an unknown `type` value, or a field belonging to another variant makes that server entry invalid.
 
@@ -396,6 +416,7 @@ Example: `mcp.json`
 
 ```json
 {
+  "$schema": "https://open-plugins.com/schemas/1.0.0/mcp.schema.json",
   "mcpServers": {
     "local-validator": {
       "type": "stdio",
@@ -424,7 +445,7 @@ Example: `mcp.json`
 #### 7.2.2 Loading rules
 
 1. Hosts that support MCP servers MUST load configuration only from `mcp.json` at the plugin root.
-2. If `mcp.json` is not valid JSON or does not satisfy the top-level requirements in §7.2.1, the host MUST disable MCP for that plugin and continue loading other component types. The host SHOULD report the invalid configuration.
+2. If `mcp.json` is not valid JSON, targets an Open Plugin version for which the host has no supported or explicitly recognized compatible version, targets a different Open Plugin version than `plugin.json`, or does not satisfy the other top-level requirements in §7.2.1, the host MUST disable MCP for that plugin and continue loading other component types. The host SHOULD report the invalid, unsupported, or mismatched configuration.
 3. If an individual server entry does not satisfy the requirements in §7.2.1, the host MUST skip that server and continue loading other servers and component types. The host SHOULD report the invalid entry.
 4. If the host does not support a valid `sse` entry, it MUST skip that server and continue loading other servers and component types. The host SHOULD report the unsupported transport.
 5. If a server fails to start, connect, authenticate, or complete the MCP handshake, the host MUST continue loading other servers and component types. The host SHOULD report the connection failure.
@@ -476,6 +497,7 @@ Example: plugin variable expansion in MCP
 
 ```json
 {
+  "$schema": "https://open-plugins.com/schemas/1.0.0/mcp.schema.json",
   "mcpServers": {
     "database": {
       "type": "stdio",
@@ -491,6 +513,16 @@ Example: plugin variable expansion in MCP
 ```
 
 ## 10. Versioning
+
+### 10.1 Specification and schema versions
+
+The version in §1 identifies the complete Open Plugin specification release, including its normative text, plugin manifest schema, and MCP configuration schema. Every specification release MUST publish both schemas with the same version as the specification, even when a schema's validation rules are unchanged from the previous release.
+
+A plugin's required `plugin.json` `$schema` value declares the Open Plugin version that the package targets. When `mcp.json` is present, the version in its `$schema` value MUST match the version declared by `plugin.json`. A mismatch makes the MCP configuration invalid under §7.2.2 but does not invalidate other component types.
+
+A change to either schema requires a new specification release. Published canonical schema identifiers MUST NOT be reassigned to different schema contents. Existing plugins MAY continue targeting an older Open Plugin version; hosts determine support using the declared canonical identifiers and any explicit compatibility mappings.
+
+### 10.2 Plugin versions
 
 Plugins SHOULD use Semantic Versioning for `version`.
 
@@ -509,10 +541,10 @@ Hosts MAY use `version` to determine whether updates are available and whether c
 A conformant host MUST satisfy all applicable requirements in sections 1–10. At minimum, it:
 
 1. Can load a plugin from a directory path.
-2. Parses and validates the closed `plugin.json` schema.
+2. Selects a locally supported plugin manifest schema from `$schema`, then parses and validates the closed `plugin.json` schema.
 3. Ignores client extension directories it does not implement.
 4. For each core component type it supports, discovers components in its fixed location.
-5. If it supports MCP servers, supports both the `stdio` and `streamable-http` variants in `mcp.json`.
+5. If it supports MCP servers, selects a locally supported MCP configuration schema from `$schema` and supports both the `stdio` and `streamable-http` variants in `mcp.json`.
 6. If the host launches plugin subprocesses (i.e., stdio MCP servers), provides `PLUGIN_ROOT` and `PLUGIN_DATA` and expands both variables in runtime configuration values (`args`, `env`, `cwd`).
 7. For stdio MCP servers, resolves `command` as a single executable token and uses the plugin root as the default subprocess working directory.
 8. Supports at least one core component type (skills or MCP servers).
@@ -539,7 +571,7 @@ A host is not required to support every core component type. For example, a skil
 ### Plugin loader
 
 - [ ] Parse and validate `plugin.json` ([§5.1](#51-location-and-loading), [§5.2](#52-manifest-object))
-- [ ] Validate required `id` and `name` fields ([§5.3](#53-required-fields))
+- [ ] Validate required `$schema`, `id`, and `name` fields ([§5.3](#53-required-fields))
 - [ ] Validate plugin name against naming constraints ([§5.5](#55-plugin-name-constraints))
 - [ ] Reject unknown `plugin.json` fields ([§5.2](#52-manifest-object))
 - [ ] Reject package paths that resolve outside the plugin root ([§4.1](#41-general-requirements))
@@ -552,7 +584,7 @@ A host is not required to support every core component type. For example, a skil
 
 ### MCP configuration
 
-- [ ] Validate the closed `mcp.json` schema and each server variant ([§7.2.1](#721-discovery-and-configuration))
+- [ ] Select a supported `$schema`, then validate the closed `mcp.json` schema and each server variant ([§7.2.1](#721-discovery-and-configuration))
 - [ ] If supporting MCP, implement both stdio and Streamable HTTP ([§7.2.1](#transport-support))
 - [ ] Treat legacy HTTP+SSE as optional and never as an automatic fallback ([§7.2.1](#transport-support))
 - [ ] Enforce remote URL and literal-header requirements ([§7.2.1](#streamable-http-and-legacy-httpsse))
@@ -603,6 +635,10 @@ The dot prefix creates a visible namespace boundary: unprefixed standard locatio
 ### Why an explicit MCP configuration format?
 
 Existing hosts use incompatible MCP configuration shapes and infer transports differently. Open Plugin therefore defines an explicit closed union whose meaning is independent of any host-native format. Distinguishing Streamable HTTP from legacy HTTP+SSE also prevents an unexpected fallback to the deprecated transport.
+
+### Why do schemas share the specification version?
+
+`plugin.json` and `mcp.json` schemas use the Open Plugin specification version rather than independent version sequences. This gives plugin authors and hosts one portable format version to understand, prevents mixed-version packages, and lets `$schema` select the complete validation and interpretation contract — including requirements that JSON Schema cannot express. Republishing an unchanged schema with a new specification release is a small maintenance cost compared with exposing three independent compatibility timelines.
 
 ### Why plugin variables over relative paths in configs?
 
