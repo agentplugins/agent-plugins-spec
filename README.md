@@ -177,9 +177,9 @@ A host loads and validates root `plugin.json` before discovering components or a
 
 The manifest MUST be JSON and MUST contain a top-level object. Its schema is closed: the only permitted top-level fields are `$schema`, `name`, `version`, `description`, `author`, `homepage`, `repository`, `license`, and `keywords`.
 
-If `plugin.json` contains any other top-level field, the manifest is invalid. Hosts MUST reject the plugin and MUST NOT discover or execute any of its components. Hosts SHOULD report each unsupported field. Client-specific fields belong under `.<client>/` as defined in §8.
+If `plugin.json` contains any other top-level field, it does not conform to the schema. Hosts MUST report and ignore each unknown field and MUST continue loading the plugin if the manifest otherwise satisfies this section. Hosts MUST NOT assign semantics to unknown fields. Client-specific fields belong under `.<client>/` as defined in §8.
 
-Every permitted field MUST match the type and constraints defined below. Any schema violation makes the manifest invalid and requires the same rejection behavior.
+Every permitted field MUST match the type and constraints defined below. Any schema violation other than an unknown top-level field is fatal: the host MUST reject the plugin and MUST NOT discover or execute any of its components.
 
 The official machine-readable schema is [`schemas/1.0.0/plugin.schema.json`](./schemas/1.0.0/plugin.schema.json). The specification text is authoritative if it conflicts with the schema.
 
@@ -532,7 +532,7 @@ A host is not required to support every core component type. For example, a skil
 ### 11.3 Unsupported components and failures
 
 1. Hosts MUST ignore unsupported component types.
-2. An invalid `plugin.json` is fatal to the plugin. As required by §5, the host MUST reject the plugin and MUST NOT discover or execute any of its components.
+2. An unknown top-level field in `plugin.json` is non-fatal under §5.2. Any other `plugin.json` schema violation is fatal to the plugin: the host MUST reject the plugin and MUST NOT discover or execute any of its components.
 3. A failure isolated to a component type, component entry, or component process MUST NOT prevent the host from loading independently valid components. Hosts MUST apply the failure behavior defined for that component in §6 and §7.
 4. Hosts SHOULD report invalid configuration and component failures. Hosts MAY report partially unsupported plugins, but lack of support for a component type is not itself an error.
 
@@ -547,7 +547,7 @@ A host is not required to support every core component type. For example, a skil
 - [ ] Parse and validate `plugin.json` ([§5.1](#51-location-and-loading), [§5.2](#52-manifest-object))
 - [ ] Validate required `$schema` and `name` fields ([§5.3](#53-required-fields))
 - [ ] Validate plugin name against naming constraints ([§5.5](#55-plugin-name-constraints))
-- [ ] Reject unknown `plugin.json` fields ([§5.2](#52-manifest-object))
+- [ ] Report and ignore unknown `plugin.json` fields ([§5.2](#52-manifest-object))
 - [ ] Reject package paths that resolve outside the plugin root ([§4.1](#41-general-requirements))
 - [ ] Ignore unsupported `.<client>/` directories ([§8](#8-client-extensions))
 
@@ -600,7 +600,7 @@ Every conformant host MUST check `plugin.json` at the plugin root ([§5.1](#51-l
 
 ### Why a closed portable manifest?
 
-Restricting root `plugin.json` to known portable fields enables strict validation, typo detection, and schema-driven key completion. It also prevents client experiments from claiming top-level names that a future Open Plugin version may need.
+Restricting root `plugin.json` to known portable fields enables strict validation, typo detection, and schema-driven key completion. It also prevents client experiments from claiming top-level names that a future Open Plugin version may need. Unknown top-level fields remain schema violations, but hosts report and ignore them instead of rejecting an otherwise valid plugin; this preserves validation feedback without making those violations fatal to loading.
 
 ### Why dot-prefixed client directories?
 
