@@ -203,6 +203,7 @@ Example: full manifest
 {
   "$schema": "https://open-plugins.com/schemas/1.0.0/plugin.schema.json",
   "name": "plugin-name",
+  "icon": "./icon.png",
   "version": "1.2.0",
   "description": "Brief plugin description",
   "author": {
@@ -235,6 +236,7 @@ If a required field is missing, has the wrong type, is empty, or otherwise viola
 
 | Field         | Type     | Description                                                           |
 | ------------- | -------- | --------------------------------------------------------------------- |
+| `icon`        | string   | Plugin icon image: a plugin-relative path (§4.1) or an absolute `https:` URL. See §5.7. |
 | `version`     | string   | Version string (Semantic Versioning RECOMMENDED). Used for update checks and cache freshness. |
 | `description` | string   | Short description of plugin purpose.                                  |
 | `author`      | object   | Author object with optional `name`, `email`, and `url` string fields. |
@@ -267,6 +269,17 @@ Invalid names: `My-Plugin` (uppercase), `-start` (leading hyphen), `has--double`
 ### 5.6 Extensions field
 
 The optional `extensions` field contains client-specific manifest data keyed by extension namespace. See §8 for processing rules.
+
+### 5.7 Icon
+
+The optional `icon` field is a string identifying an image that represents the plugin in host user interfaces. If present, its value MUST be either:
+
+1. a plugin-relative path as defined in §4.1 (beginning with `./` and resolving within the plugin root), or
+2. an absolute `https:` URL that contains no user information and no fragment.
+
+The image SHOULD be square and at least 512x512 pixels. Whether a host retrieves and renders the icon is host-defined, and a host MAY ignore `icon` entirely. Hosts MUST NOT retrieve a remote icon while loading a plugin (see §5.2).
+
+If `icon` is present but is neither a valid plugin-relative path nor a valid absolute `https:` URL, or if a plugin-relative path resolves outside the plugin root, the host MUST ignore the `icon` field and MUST continue loading the plugin. The `icon` field is advisory only; its value or validity MUST NOT affect component discovery or execution.
 
 ## 6. Component discovery
 
