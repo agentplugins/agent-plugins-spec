@@ -493,7 +493,7 @@ The host chooses the `PLUGIN_DATA` location. It MUST create the directory before
 
 Use `PLUGIN_DATA` for: installed dependencies (node_modules, virtual environments), generated code, caches, and other plugin state that should persist across updates. Use `PLUGIN_ROOT` for referencing bundled scripts, binaries, and config files that ship with the plugin.
 
-The host chooses the base subprocess environment and MAY inherit, omit, or sanitize ambient variables. After placeholder expansion, entries in a stdio server's `env` object MUST overlay the base environment and replace same-name entries according to platform environment-name semantics. The host MUST supply `PLUGIN_ROOT` and `PLUGIN_DATA` as defined above.
+The host chooses the base subprocess environment and MAY inherit, omit, or sanitize ambient variables. After placeholder expansion, entries in a stdio server's `env` object MUST overlay the base environment and replace same-name entries according to platform environment-name semantics. The host MUST then set `PLUGIN_ROOT` and `PLUGIN_DATA` to the values defined above, replacing any entries with equivalent names according to platform environment-name semantics.
 
 Except for the platform executable search used to resolve a bare `command`, plugins claiming conformance MUST NOT depend on a base-environment variable unless this specification requires that variable or the server configuration supplies it explicitly.
 
@@ -616,6 +616,7 @@ A host is not required to support every core component type. For example, a skil
 - [ ] Use the plugin root as the default MCP server working directory ([§7.2.1](#721-discovery-and-configuration))
 - [ ] Validate explicit `cwd` forms and post-resolution containment ([§7.2.1](#721-discovery-and-configuration))
 - [ ] Overlay configured `env` entries on a host-selected base environment ([§9.1](#91-subprocess-environment))
+- [ ] Set host-provided `PLUGIN_ROOT` and `PLUGIN_DATA` after applying configured `env`, replacing equivalent names according to platform environment-name semantics ([§9.1](#91-subprocess-environment))
 - [ ] Do not require configured `PATH` to affect bare-command resolution ([§7.2.1](#721-discovery-and-configuration))
 - [ ] Expand `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` in MCP server `args`, `env`, and `cwd` fields ([§9.2](#92-placeholder-expansion))
 
