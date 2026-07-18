@@ -14,7 +14,15 @@
       "minLength": 1,
       "maxLength": 64,
       "pattern": "^(?!.*(?:--|\\.\\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$",
-      "description": "Human-readable plugin name."
+      "description": "Plugin identifier name; constrained per §5.5 of the Open Plugin specification."
+    },
+    "displayName": {
+      "type": "string",
+      "description": "Optional human-readable display label for host user interfaces. Not constrained by the §5.5 name rules. Hosts MAY use this instead of `name`; if it is absent or empty, hosts use `name`. See §5.7."
+    },
+    "icon": {
+      "type": "string",
+      "description": "Optional plugin-relative path (per §4.1: begins with './' and resolves within the plugin root) to an image representing the plugin in host user interfaces. Advisory: hosts MUST ignore an `icon` that is not a valid in-root plugin-relative path and MUST NOT retrieve a remote resource to resolve it. See §5.8."
     },
     "version": {
       "type": "string"
