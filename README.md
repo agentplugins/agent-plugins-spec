@@ -176,11 +176,11 @@ A host loads and validates root `plugin.json` before discovering components or a
 
 ### 5.2 Manifest object
 
-The manifest MUST be JSON and MUST contain a top-level object. Its schema is closed: the only permitted top-level fields are `$schema`, `name`, `version`, `description`, `author`, `homepage`, `repository`, `license`, `keywords`, and `extensions`.
+The manifest MUST be JSON and MUST contain a top-level object. Its schema is closed: the only permitted top-level fields are `$schema`, `name`, `displayName`, `icon`, `version`, `description`, `author`, `homepage`, `repository`, `license`, `keywords`, and `extensions`.
 
 If `plugin.json` contains any other top-level field, it does not conform to the schema. Hosts MUST report and ignore each unknown field and MUST continue loading the plugin if the manifest otherwise satisfies this section. Hosts MUST NOT assign semantics to unknown fields. Client-specific manifest data belongs under `extensions` as defined in §8.
 
-A non-object `extensions` field is handled as defined in §8.1. Every permitted field otherwise MUST match the type and constraints defined below. Any schema violation other than an unknown top-level field or a non-object `extensions` field is fatal: the host MUST reject the plugin and MUST NOT discover or execute any of its components.
+A non-object `extensions` field is handled as defined in §8.1. Every permitted field otherwise MUST match the type and constraints defined below. Any schema violation other than an unknown top-level field, a non-object `extensions` field, or a string `icon` value that violates only the plugin-relative path requirements of §5.8 (which §5.8 defines as advisory) is fatal: the host MUST reject the plugin and MUST NOT discover or execute any of its components.
 
 The official machine-readable schema is [`schemas/1.0.0/plugin.schema.json`](./schemas/1.0.0/plugin.schema.json). The specification text is authoritative if it conflicts with the schema.
 
@@ -203,6 +203,8 @@ Example: full manifest
 {
   "$schema": "https://open-plugins.com/schemas/1.0.0/plugin.schema.json",
   "name": "plugin-name",
+  "displayName": "Plugin Name",
+  "icon": "./icon.png",
   "version": "1.2.0",
   "description": "Brief plugin description",
   "author": {
@@ -227,7 +229,7 @@ Example: full manifest
 | Field     | Type   | Description                                                  |
 | --------- | ------ | ------------------------------------------------------------ |
 | `$schema` | string | Canonical plugin manifest schema identifier defined in §5.2. |
-| `name`    | string | Human-readable plugin name.                                  |
+| `name`    | string | Plugin identifier name (see §5.5 constraints).               |
 
 If a required field is missing, has the wrong type, is empty, or otherwise violates its requirements, the manifest is invalid. Hosts MUST reject the plugin and MUST NOT discover or execute any of its components. Hosts SHOULD report which required field is invalid.
 
@@ -235,6 +237,8 @@ If a required field is missing, has the wrong type, is empty, or otherwise viola
 
 | Field         | Type     | Description                                                           |
 | ------------- | -------- | --------------------------------------------------------------------- |
+| `displayName` | string   | Human-readable label for host UIs. See §5.7.                          |
+| `icon`        | string   | Plugin-relative path (§4.1) to an icon image. Advisory. See §5.8.     |
 | `version`     | string   | Version string (Semantic Versioning RECOMMENDED). Used for update checks and cache freshness. |
 | `description` | string   | Short description of plugin purpose.                                  |
 | `author`      | object   | Author object with optional `name`, `email`, and `url` string fields. |
@@ -245,7 +249,7 @@ If a required field is missing, has the wrong type, is empty, or otherwise viola
 
 The `author` object MAY contain only the `name`, `email`, and `url` fields, each with a string value. Any other field or value type makes the manifest invalid.
 
-Except where this specification states an explicit constraint, metadata fields are validated only by their JSON types. Hosts MUST NOT reject a manifest solely because `version` is not valid Semantic Versioning; `homepage`, `repository`, or `author.url` is not a recognized URL; `author.email` is not a recognized email address; or `license` is not an SPDX identifier.
+Except where this specification states an explicit constraint, metadata fields are validated only by their JSON types. Hosts MUST NOT reject a manifest solely because `version` is not valid Semantic Versioning; `homepage`, `repository`, or `author.url` is not a recognized URL; `author.email` is not a recognized email address; `license` is not an SPDX identifier; or a string `icon` does not satisfy the plugin-relative path requirements of §5.8.
 
 ### 5.5 Plugin name constraints
 
@@ -267,6 +271,22 @@ Invalid names: `My-Plugin` (uppercase), `-start` (leading hyphen), `has--double`
 ### 5.6 Extensions field
 
 The optional `extensions` field contains client-specific manifest data keyed by extension namespace. See §8 for processing rules.
+
+### 5.7 Display name
+
+The optional `displayName` field is a human-readable label for the plugin, intended for presentation in host user interfaces. Unlike `name`, it is not constrained by §5.5 and MAY contain mixed case, spaces, and other characters.
+
+If present, `displayName` MUST be a string. A host MAY use `displayName` wherever it would otherwise present `name`. If `displayName` is absent, a host MUST use `name` as the display label. A host SHOULD treat an empty `displayName` as absent and fall back to `name`.
+
+### 5.8 Icon
+
+The optional `icon` field identifies an image that represents the plugin in host user interfaces. If present, `icon` MUST be a string.
+
+The value is a plugin-relative path as defined in §4.1: it MUST begin with `./`, be resolved against the plugin root, and remain within the filesystem-resolved plugin root. Open Plugin does not define remote (`http:` or `https:`) icon references, and a host MUST NOT retrieve a remote resource to resolve `icon`.
+
+The image SHOULD be square and at least 512x512 pixels. Whether and how a host renders the icon is host-defined, and a host MAY ignore `icon` entirely.
+
+`icon` is advisory. At the schema level, the only constraint on `icon` is that, if present, it MUST be a string; a non-string `icon` is a fatal type violation under §5.2. A string `icon` that does not satisfy the plugin-relative path requirements above is not a fatal violation: if `icon` is absent, is not a valid plugin-relative path, or resolves outside the plugin root, the host MUST ignore the field and MUST continue loading the plugin, and the value or validity of `icon` MUST NOT affect component discovery or execution. A host that renders the icon MUST treat the referenced file as untrusted image data: it MUST NOT execute or otherwise interpret any active content the file may contain (for example, script embedded in an SVG), and rendering the icon MUST NOT cause any network request, including a request to resolve a subresource referenced by the file. Open Plugin defines no portable default icon; any placeholder is host-defined.
 
 ## 6. Component discovery
 
@@ -579,7 +599,7 @@ A host is not required to support every core component type. For example, a skil
 ### 11.3 Unsupported components and failures
 
 1. Hosts MUST ignore unsupported component types.
-2. An unknown top-level field or a non-object `extensions` field is non-fatal under §5.2 and §8.1. Any other `plugin.json` schema violation is fatal to the plugin: the host MUST reject the plugin and MUST NOT discover or execute any of its components.
+2. An unknown top-level field, a non-object `extensions` field, or a string `icon` value that violates only the plugin-relative path requirements of §5.8 is non-fatal under §5.2, §8.1, and §5.8. Any other `plugin.json` schema violation is fatal to the plugin: the host MUST reject the plugin and MUST NOT discover or execute any of its components.
 3. A failure isolated to a component type, component entry, or component process MUST NOT prevent the host from loading independently valid components. Hosts MUST apply the failure behavior defined for that component in §6 and §7.
 4. Hosts SHOULD report invalid configuration and component failures. Hosts MAY report partially unsupported plugins, but lack of support for a component type or client extension is not itself an error.
 
@@ -595,6 +615,8 @@ A host is not required to support every core component type. For example, a skil
 - [ ] Validate required `$schema` and `name` fields ([§5.3](#53-required-fields))
 - [ ] Validate plugin name against naming constraints ([§5.5](#55-plugin-name-constraints))
 - [ ] Report and ignore unknown `plugin.json` fields ([§5.2](#52-manifest-object))
+- [ ] Prefer `displayName` for display when present and non-empty, otherwise fall back to `name` ([§5.7](#57-display-name))
+- [ ] Treat `icon` as advisory: ignore it unless it is a plugin-relative path that resolves within the plugin root, and never retrieve a remote resource to resolve it ([§5.8](#58-icon))
 - [ ] Ignore unimplemented namespaces in `extensions` without validating the contents of their values ([§8.1](#81-manifest-extension-data))
 - [ ] Reject package paths that resolve outside the plugin root ([§4.1](#41-general-requirements))
 - [ ] Discover implemented file-based extensions from their top-level namespace directories ([§8.2](#82-extension-directories))
@@ -654,6 +676,12 @@ Restricting root `plugin.json` to known fields enables strict validation, typo d
 ### Why reverse-domain client extensions?
 
 Reverse-domain identifiers provide a decentralized convention for avoiding collisions without requiring a central client-name registry. The same identifier can be used for manifest data and a client-specific directory, while either representation can exist independently. Extension directories remain top-level to keep plugin layouts flat and convention-driven.
+
+### Why portable display metadata (`displayName` and `icon`)?
+
+Presentation of a plugin in a host UI is a cross-host concern. The constrained machine identifier `name` (§5.5) is unsuitable as a user-facing label, so `displayName` supplies an unconstrained human-readable name that hosts can present, with a defined fallback to `name`. `icon` supplies an optional visual identifier. Both are advisory: they influence presentation only and never affect component discovery or execution.
+
+The portable core is deliberately narrow. `icon` is restricted to a plugin-relative path so that assets ship inside the package and are covered by the existing containment rules (§4.1); remote references are excluded to avoid load-time fetching, SSRF, and privacy concerns, consistent with the schema-retrieval prohibition in §5.2. Richer or host-specific presentation data — screenshots, colors, categories or other taxonomy, starter prompts, legal or policy URLs, and marketplace ranking signals — is intentionally left to client `extensions` (§8) rather than the portable manifest, because it does not carry the same meaning across hosts.
 
 ### Why an explicit MCP configuration format?
 
