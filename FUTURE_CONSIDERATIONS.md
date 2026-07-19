@@ -1,6 +1,6 @@
 # Future Considerations
 
-This document records possible areas for future versions of the Agent Plugin Specification. It is non-normative, and none of these items is required for conformance or committed for inclusion in a future release.
+This document records possible areas for future versions of the Agent Plugins Specification. It is non-normative, and none of these items is required for conformance or committed for inclusion in a future release.
 
 ## Permission and approval UX
 

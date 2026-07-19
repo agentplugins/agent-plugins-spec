@@ -6,7 +6,7 @@ This README is a non-normative introduction. The versioned specification defines
 
 ## Status
 
-Agent Plugin Specification 1.0.0 is a working draft and has not been published.
+Agent Plugins Specification 1.0.0 is a working draft and has not been published.
 
 ## Quick Start
 
@@ -40,11 +40,11 @@ description: Greet the user and offer help.
 Greet the user and offer help.
 ```
 
-A host that supports skills can load the plugin by reading `plugin.json` and discovering `skills/greet/SKILL.md`. How the host exposes the skill to users or models is outside the Agent Plugin specification.
+A host that supports skills can load the plugin by reading `plugin.json` and discovering `skills/greet/SKILL.md`. How the host exposes the skill to users or models is outside the Agent Plugins specification.
 
 ## Project Documents
 
-- [Agent Plugin Specification 1.0.0 working draft](./spec/1.0.0.md)
+- [Agent Plugins Specification 1.0.0 working draft](./spec/1.0.0.md)
 - [Plugin manifest schema](./schemas/1.0.0/plugin.schema.json)
 - [MCP configuration schema](./schemas/1.0.0/mcp.schema.json)
 - [Technical Charter](./GOVERNANCE.md)
