@@ -58,6 +58,10 @@
       "additionalProperties": {
         "type": "object"
       }
+    },
+    "icon": {
+      "type": "string",
+      "description": "Optional plugin icon image, either a plugin-relative path beginning with './' (resolved within the plugin root) or an absolute https: URL with no user information or fragment. The image SHOULD be square and at least 512x512 pixels. Advisory only; hosts MUST ignore an invalid value and MUST NOT retrieve a remote icon while loading a plugin."
     }
   },
   "required": ["$schema", "name"],
