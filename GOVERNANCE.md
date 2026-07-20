@@ -14,7 +14,7 @@ The mission of the Project is to define, maintain, and promote an open, vendor-n
 
 The scope of the Project includes:
 
-- The Agent Plugin Specification
+- The Agent Plugins Specification
 - Reference implementations
 - Conformance tests
 - Documentation
@@ -97,7 +97,7 @@ Upon removal, resignation, or permanent unavailability, the Core Maintainers wil
 
 The TSC is responsible for:
 
-- stewarding the Agent Plugin Specification
+- stewarding the Agent Plugins Specification
 - approving changes, extensions, and deprecations
 - managing reference implementations and test suites
 - establishing release, compatibility, and versioning policies
