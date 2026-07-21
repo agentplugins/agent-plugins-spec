@@ -18,7 +18,7 @@ The scope of the Project includes:
 - Reference implementations
 - Conformance tests
 - Documentation
-- Tooling and other artifacts that support interoperable hosts, plugin packages, and ecosystems built on the specification
+- Tooling and other artifacts that support interoperable clients, plugin packages, and ecosystems built on the specification
 
 The Project exists to enable portability, competition, and long-term stability for plugin packages across vendors and platforms.
 
