@@ -2,7 +2,7 @@
 
 ## Technical Charter
 
-This Charter sets forth the responsibilities and procedures for technical contribution to, and oversight of, **Agent Plugins** (the “Project”), an open, vendor-neutral specification for packaging agent extensions into distributable plugins.
+This Charter sets forth the responsibilities and procedures for technical contribution to, and oversight of, **Agent Plugins** (the “Project”), an open, vendor-neutral specification for packaging reusable components that extend AI agents into distributable plugins.
 
 Agent Plugins is operated as a community-governed open specification project. All contributors (including those serving as Maintainers, Core Maintainers, the Lead Core Maintainer, and other technical roles) and all other participants in the Project (collectively, “Collaborators”) must comply with the terms of this Charter.
 
@@ -10,7 +10,7 @@ Agent Plugins is operated as a community-governed open specification project. Al
 
 ## 1. Mission and Scope
 
-The mission of the Project is to define, maintain, and promote an open, vendor-neutral specification for packaging agent extensions into distributable plugins.
+The mission of the Project is to define, maintain, and promote an open, vendor-neutral specification for packaging reusable components that extend AI agents into distributable plugins.
 
 The scope of the Project includes:
 
@@ -143,7 +143,7 @@ Unless otherwise approved by the TSC:
 
 All code contributions must include a Developer Certificate of Origin (DCO) sign-off.
 
-The TSC may approve alternative licenses for specific components by a two-thirds vote.
+The TSC may approve alternative licenses for specific Project materials by a two-thirds vote.
 
 ---
 

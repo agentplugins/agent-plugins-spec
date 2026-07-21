@@ -1,6 +1,6 @@
 # Agent Plugins
 
-Agent Plugins is an open, vendor-neutral specification for packaging agent extensions into distributable plugins. It defines a portable package format for Agent Skills and MCP servers.
+Agent Plugins is an open, vendor-neutral specification for packaging reusable components that extend AI agents into distributable plugins. It defines a portable package format for Agent Skills and MCP servers.
 
 This README is a non-normative introduction. The versioned specification defines the portable contract.
 
