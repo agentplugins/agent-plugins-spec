@@ -21,7 +21,7 @@ Versioned files under `spec/` define the Agent Plugins specification, with corre
 - Give portable fields deterministic, client-neutral semantics.
 - Keep client-owned namespaces client-owned. Do not standardize their internal validation, dependencies, or failure behavior without a demonstrated interoperability need.
 - Clients should generally validate the portable contract and the extension namespaces they implement. Do not impose work on every client merely to reject data it otherwise ignores.
-- Apply failure isolation to independent portable components where useful, but do not project that rule into client-specific behavior; a client may define relationships among its own data and files.
+- Apply failure isolation to independent components where useful, but do not project that rule into client-specific behavior; a client may define relationships among its own data and files.
 - Use implementation-defined behavior intentionally at genuine portability boundaries, not to avoid specifying behavior required for interoperability.
 
 ## Editorial discipline
