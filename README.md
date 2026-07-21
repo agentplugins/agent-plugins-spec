@@ -40,7 +40,7 @@ description: Greet the user and offer help.
 Greet the user and offer help.
 ```
 
-A host that supports skills can load the plugin by reading `plugin.json` and discovering `skills/greet/SKILL.md`. How the host exposes the skill to users or models is outside the Agent Plugins specification.
+A client that supports skills can load the plugin by reading `plugin.json` and discovering `skills/greet/SKILL.md`. How the client exposes the skill to users or models is outside the Agent Plugins specification.
 
 ## Project Documents
 

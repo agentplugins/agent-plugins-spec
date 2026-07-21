@@ -1,14 +1,14 @@
 # Contributing to Agent Plugins
 
-Agent Plugins defines a small, portable interoperability contract for plugin authors and host implementers. Changes to that contract succeed only when the relevant implementers can adopt them consistently.
+Agent Plugins defines a small, portable interoperability contract for plugin authors and client implementers. Changes to that contract succeed only when the relevant implementers can adopt them consistently.
 
 ## Specification Proposals
 
 Start a [GitHub Discussion](https://github.com/agentplugins/agent-plugins-spec/discussions) before opening a pull request for a new feature or a material behavior change. A proposal should explain:
 
 - the concrete implementation or interoperability problem;
-- which plugin authors, hosts, or clients encounter it;
-- why the problem belongs in the portable specification rather than host policy or a client-specific extension; and
+- which plugin authors or client implementers encounter it;
+- why the problem belongs in the portable specification rather than client policy or a client-specific extension; and
 - which implementers are prepared to adopt the proposed behavior.
 
 A technically complete pull request is not, by itself, evidence of implementor consensus or adoption. Maintainers may close proposals that have not established a concrete portability need or sufficient implementor support. When in doubt, begin with a Discussion rather than investing in a specification patch.
