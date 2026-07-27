@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "$id": "https://agent-plugins.org/schemas/1.1.0/mcp.schema.json",
   "title": "Agent Plugins MCP Configuration",
-  "description": "Machine-readable schema for mcp.json in Agent Plugins 1.0.0. The Agent Plugins specification defines additional semantic and operational requirements.",
+  "description": "Machine-readable schema for mcp.json in Agent Plugins 1.1.0. The Agent Plugins specification defines additional semantic and operational requirements.",
   "type": "object",
   "properties": {
     "$schema": {
-      "const": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+      "const": "https://agent-plugins.org/schemas/1.1.0/mcp.schema.json",
       "description": "Canonical identifier of the MCP configuration schema for the Agent Plugins version targeted by this document."
     },
     "mcpServers": {

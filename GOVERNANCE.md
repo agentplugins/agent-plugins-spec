@@ -2,23 +2,23 @@
 
 ## Technical Charter
 
-This Charter sets forth the responsibilities and procedures for technical contribution to, and oversight of, **Open Plugins** (the “Project”), an open, vendor-neutral specification for packaging agent extensions into distributable plugins.
+This Charter sets forth the responsibilities and procedures for technical contribution to, and oversight of, **Agent Plugins** (the “Project”), an open, vendor-neutral specification for packaging reusable components that extend AI agents into distributable plugins.
 
-Open Plugins is operated as a community-governed open specification project. All contributors (including those serving as Maintainers, Core Maintainers, the Lead Core Maintainer, and other technical roles) and all other participants in the Project (collectively, “Collaborators”) must comply with the terms of this Charter.
+Agent Plugins is operated as a community-governed open specification project. All contributors (including those serving as Maintainers, Core Maintainers, the Lead Core Maintainer, and other technical roles) and all other participants in the Project (collectively, “Collaborators”) must comply with the terms of this Charter.
 
 ---
 
 ## 1. Mission and Scope
 
-The mission of the Project is to define, maintain, and promote an open, vendor-neutral specification for packaging agent extensions into distributable plugins.
+The mission of the Project is to define, maintain, and promote an open, vendor-neutral specification for packaging reusable components that extend AI agents into distributable plugins.
 
 The scope of the Project includes:
 
-- The Open Plugins specification
+- The Agent Plugins Specification
 - Reference implementations
 - Conformance tests
 - Documentation
-- Tooling and other artifacts that support interoperable hosts, plugin packages, and ecosystems built on the specification
+- Tooling and other artifacts that support interoperable clients, plugin packages, and ecosystems built on the specification
 
 The Project exists to enable portability, competition, and long-term stability for plugin packages across vendors and platforms.
 
@@ -39,7 +39,7 @@ No single vendor may control a majority of Core Maintainer seats.
 
 The **Technical Steering Committee (TSC)** consists of all Core Maintainers together with the Lead Core Maintainer. The TSC is responsible for all technical oversight of the Project.
 
-The initial list of Core Maintainers and the Lead Core Maintainer shall be recorded in the Project’s CONTRIBUTING file. The TSC may define alternative methods for selecting or rotating voting members, provided such methods are publicly documented.
+The current list of Core Maintainers and the Lead Core Maintainer shall be recorded in the Project’s MAINTAINERS file. The TSC may define alternative methods for selecting or rotating voting members, provided such methods are publicly documented.
 
 TSC meetings are open and may be conducted electronically or in person.
 
@@ -97,7 +97,7 @@ Upon removal, resignation, or permanent unavailability, the Core Maintainers wil
 
 The TSC is responsible for:
 
-- stewarding the Open Plugins specification
+- stewarding the Agent Plugins Specification
 - approving changes, extensions, and deprecations
 - managing reference implementations and test suites
 - establishing release, compatibility, and versioning policies
@@ -141,15 +141,13 @@ Unless otherwise approved by the TSC:
 - Specification text and documentation are licensed under **Creative Commons Attribution 4.0 (CC-BY-4.0)**
 - Code is licensed under the **Apache 2.0 License**
 
-All code contributions must include a Developer Certificate of Origin (DCO) sign-off.
-
-The TSC may approve alternative licenses for specific components by a two-thirds vote.
+The TSC may approve alternative licenses for specific Project materials by a two-thirds vote.
 
 ---
 
 ## 10. Project Assets and Trademarks
 
-The name **Open Plugins**, associated logos, domains, and GitHub organizations are held in trust for the Project by a neutral entity designated by the TSC.
+The name **Agent Plugins**, associated logos, domains, and GitHub organizations are held in trust for the Project by a neutral entity designated by the TSC.
 
 No single vendor may claim exclusive ownership or control of Project identity or infrastructure.
 
