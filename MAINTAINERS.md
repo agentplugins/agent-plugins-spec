@@ -8,4 +8,4 @@ The Agent Plugins Technical Steering Committee consists of the following Core Ma
 - Gav Verma (OpenAI)
 - Jonathan Hefner (Vercel)
 
-**Lead Core Maintainer:** TBD
+**Lead Core Maintainer:** Jonathan Hefner
