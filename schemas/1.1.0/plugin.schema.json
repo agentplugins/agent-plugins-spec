@@ -16,13 +16,20 @@
       "pattern": "^(?!.*(?:--|\\.\\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$",
       "description": "Plugin identifier name; constrained per §5.5 of the Agent Plugins specification."
     },
-    "displayName": {
-      "type": "string",
-      "description": "Optional human-readable display label. See §5.7."
-    },
-    "icon": {
-      "type": "string",
-      "description": "Optional plugin-relative path to an image representing the plugin. See §5.8."
+    "presentation": {
+      "type": "object",
+      "description": "Optional passive presentation metadata for client user interfaces. See §5.7.",
+      "properties": {
+        "displayName": {
+          "type": "string",
+          "description": "Optional human-readable display label. See §5.7.1."
+        },
+        "icon": {
+          "type": "string",
+          "description": "Optional plugin-relative path to an image representing the plugin. See §5.7.2."
+        }
+      },
+      "additionalProperties": false
     },
     "version": {
       "type": "string"
