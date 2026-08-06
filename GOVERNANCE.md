@@ -2,7 +2,7 @@
 
 ## Technical Charter
 
-This Charter sets forth the responsibilities and procedures for technical contribution to, and oversight of, **Agent Plugins** (the “Project”), an open, vendor-neutral specification for packaging reusable components that extend AI agents into distributable plugins.
+This Charter sets forth the responsibilities and procedures for technical contribution to, and oversight of, **Agent Plugins** (the “Project”), an open, vendor-neutral standard for packaging reusable components that extend AI agents into distributable plugins.
 
 Agent Plugins is operated as a community-governed open specification project. All contributors (including those serving as Maintainers, Core Maintainers, the Lead Core Maintainer, and other technical roles) and all other participants in the Project (collectively, “Collaborators”) must comply with the terms of this Charter.
 
