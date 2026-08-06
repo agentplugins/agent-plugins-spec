@@ -4,6 +4,7 @@ The Agent Plugins Technical Steering Committee consists of the following Core Ma
 
 - Clare Liguori (Amazon)
 - Roshan Sadanani (Cursor)
+- Kevin Hou (Google)
 - Harald Kirschner (Microsoft)
 - Gav Verma (OpenAI)
 - Jonathan Hefner (Vercel)
