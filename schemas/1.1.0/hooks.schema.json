@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-plugins.org/schemas/1.1.0/hooks.schema.json",
+  "title": "Agent Plugins Hooks Configuration",
+  "description": "Machine-readable schema for hooks.json in Agent Plugins 1.1.0. The Agent Plugins specification defines additional semantic and operational requirements.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "const": "https://agent-plugins.org/schemas/1.1.0/hooks.schema.json",
+      "description": "Canonical identifier of the hooks configuration schema for the Agent Plugins version targeted by this document."
+    },
+    "hooks": {
+      "type": "object",
+      "properties": {
+        "tool.before": {
+          "$ref": "#/$defs/handlers"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["$schema", "hooks"],
+  "additionalProperties": false,
+  "$defs": {
+    "handlers": {
+      "title": "Hook handlers",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/handler"
+      },
+      "minItems": 1
+    },
+    "handler": {
+      "title": "Hook handler",
+      "type": "object",
+      "properties": {
+        "command": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Executable token. Resolution rules are defined by the Agent Plugins specification."
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["command"],
+      "additionalProperties": false
+    },
+    "toolBeforeInput": {
+      "title": "tool.before input",
+      "type": "object",
+      "properties": {
+        "hook_event_name": {
+          "const": "tool.before"
+        },
+        "session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tool_use_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tool_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tool_input": true
+      },
+      "required": [
+        "hook_event_name",
+        "session_id",
+        "cwd",
+        "tool_use_id",
+        "tool_name",
+        "tool_input"
+      ],
+      "additionalProperties": false
+    },
+    "toolBeforeOutput": {
+      "title": "tool.before output",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "decision": {
+              "const": "allow"
+            }
+          },
+          "required": ["decision"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "decision": {
+              "const": "deny"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": ["decision", "reason"],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}
