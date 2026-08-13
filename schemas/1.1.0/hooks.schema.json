@@ -104,6 +104,9 @@
         },
         {
           "$ref": "#/$defs/webFetchToolProfile"
+        },
+        {
+          "$ref": "#/$defs/webSearchToolProfile"
         }
       ]
     },
@@ -296,6 +299,31 @@
             }
           },
           "required": ["urls"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["name", "input"],
+      "additionalProperties": false
+    },
+    "webSearchToolProfile": {
+      "title": "Web search tool profile",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "web.search"
+        },
+        "input": {
+          "type": "object",
+          "properties": {
+            "queries": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["queries"],
           "additionalProperties": false
         }
       },
