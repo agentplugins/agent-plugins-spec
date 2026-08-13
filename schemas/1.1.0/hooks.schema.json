@@ -98,6 +98,9 @@
         },
         {
           "$ref": "#/$defs/fileReadToolProfile"
+        },
+        {
+          "$ref": "#/$defs/webFetchToolProfile"
         }
       ]
     },
@@ -162,6 +165,32 @@
             }
           },
           "required": ["path"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["name", "input"],
+      "additionalProperties": false
+    },
+    "webFetchToolProfile": {
+      "title": "Web fetch tool profile",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "web.fetch"
+        },
+        "input": {
+          "type": "object",
+          "properties": {
+            "urls": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "required": ["urls"],
           "additionalProperties": false
         }
       },
