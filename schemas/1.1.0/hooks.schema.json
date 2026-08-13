@@ -72,7 +72,10 @@
           "type": "string",
           "minLength": 1
         },
-        "tool_input": true
+        "tool_input": true,
+        "tool_profile": {
+          "$ref": "#/$defs/toolProfile"
+        }
       },
       "required": [
         "hook_event_name",
@@ -82,6 +85,62 @@
         "tool_name",
         "tool_input"
       ],
+      "additionalProperties": false
+    },
+    "toolProfile": {
+      "title": "Portable tool profile",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/mcpToolProfile"
+        },
+        {
+          "$ref": "#/$defs/shellToolProfile"
+        }
+      ]
+    },
+    "mcpToolProfile": {
+      "title": "MCP tool profile",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "mcp"
+        },
+        "input": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "arguments": {
+              "type": "object"
+            }
+          },
+          "required": ["name", "arguments"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["name", "input"],
+      "additionalProperties": false
+    },
+    "shellToolProfile": {
+      "title": "Shell tool profile",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "shell"
+        },
+        "input": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string"
+            }
+          },
+          "required": ["command"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["name", "input"],
       "additionalProperties": false
     },
     "toolBeforeOutput": {
