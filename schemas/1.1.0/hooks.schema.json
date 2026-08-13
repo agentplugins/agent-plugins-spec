@@ -95,6 +95,9 @@
         },
         {
           "$ref": "#/$defs/shellToolProfile"
+        },
+        {
+          "$ref": "#/$defs/fileReadToolProfile"
         }
       ]
     },
@@ -137,6 +140,28 @@
             }
           },
           "required": ["command"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["name", "input"],
+      "additionalProperties": false
+    },
+    "fileReadToolProfile": {
+      "title": "File read tool profile",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "file.read"
+        },
+        "input": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": ["path"],
           "additionalProperties": false
         }
       },
