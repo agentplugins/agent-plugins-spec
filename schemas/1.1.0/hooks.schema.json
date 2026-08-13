@@ -100,6 +100,9 @@
           "$ref": "#/$defs/fileReadToolProfile"
         },
         {
+          "$ref": "#/$defs/fileModifyToolProfile"
+        },
+        {
           "$ref": "#/$defs/webFetchToolProfile"
         }
       ]
@@ -169,6 +172,108 @@
         }
       },
       "required": ["name", "input"],
+      "additionalProperties": false
+    },
+    "fileModifyToolProfile": {
+      "title": "File modification tool profile",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "file.modify"
+        },
+        "input": {
+          "type": "object",
+          "properties": {
+            "operations": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/fileEditOperation"
+                  },
+                  {
+                    "$ref": "#/$defs/fileWriteOperation"
+                  },
+                  {
+                    "$ref": "#/$defs/fileDeleteOperation"
+                  },
+                  {
+                    "$ref": "#/$defs/fileMoveOperation"
+                  }
+                ]
+              }
+            }
+          },
+          "required": ["operations"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["name", "input"],
+      "additionalProperties": false
+    },
+    "fileEditOperation": {
+      "title": "File edit operation",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "edit"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["kind", "path"],
+      "additionalProperties": false
+    },
+    "fileWriteOperation": {
+      "title": "File write operation",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "write"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["kind", "path"],
+      "additionalProperties": false
+    },
+    "fileDeleteOperation": {
+      "title": "File delete operation",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "delete"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["kind", "path"],
+      "additionalProperties": false
+    },
+    "fileMoveOperation": {
+      "title": "File move operation",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "move"
+        },
+        "from": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["kind", "from", "to"],
       "additionalProperties": false
     },
     "webFetchToolProfile": {
