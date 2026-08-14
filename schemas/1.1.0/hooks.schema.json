@@ -12,6 +12,9 @@
     "hooks": {
       "type": "object",
       "properties": {
+        "agent.after_response": {
+          "$ref": "#/$defs/handlers"
+        },
         "tool.before": {
           "$ref": "#/$defs/handlers"
         }
@@ -358,6 +361,48 @@
           "additionalProperties": false
         }
       ]
+    },
+    "agentAfterResponseInput": {
+      "title": "agent.after_response input",
+      "type": "object",
+      "properties": {
+        "hook_event_name": {
+          "const": "agent.after_response"
+        },
+        "session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1
+        },
+        "continuation_active": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "hook_event_name",
+        "session_id",
+        "cwd",
+        "continuation_active"
+      ],
+      "additionalProperties": false
+    },
+    "agentAfterResponseOutput": {
+      "title": "agent.after_response output",
+      "type": "object",
+      "properties": {
+        "decision": {
+          "const": "continue"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["decision", "reason"],
+      "additionalProperties": false
     }
   }
 }
