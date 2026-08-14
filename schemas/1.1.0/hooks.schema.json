@@ -12,6 +12,9 @@
     "hooks": {
       "type": "object",
       "properties": {
+        "session.start": {
+          "$ref": "#/$defs/handlers"
+        },
         "agent.after_response": {
           "$ref": "#/$defs/handlers"
         },
@@ -50,6 +53,37 @@
         }
       },
       "required": ["command"],
+      "additionalProperties": false
+    },
+    "sessionStartInput": {
+      "title": "session.start input",
+      "type": "object",
+      "properties": {
+        "hook_event_name": {
+          "const": "session.start"
+        },
+        "session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["hook_event_name", "session_id", "cwd"],
+      "additionalProperties": false
+    },
+    "sessionStartOutput": {
+      "title": "session.start output",
+      "type": "object",
+      "properties": {
+        "additional_context": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["additional_context"],
       "additionalProperties": false
     },
     "toolBeforeInput": {
