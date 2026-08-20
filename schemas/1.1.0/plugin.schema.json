@@ -14,10 +14,14 @@
       "minLength": 1,
       "maxLength": 64,
       "pattern": "^(?!.*(?:--|\\.\\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$",
-      "description": "Human-readable plugin name."
+      "description": "Portable plugin name."
     },
     "version": {
       "type": "string"
+    },
+    "displayName": {
+      "type": "string",
+      "description": "Human-readable plugin name for presentation."
     },
     "description": {
       "type": "string"
