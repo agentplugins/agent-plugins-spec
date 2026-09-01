@@ -3,6 +3,7 @@
   "$id": "https://agent-plugins.org/schemas/1.1.0/plugin.schema.json",
   "title": "Agent Plugins Manifest",
   "description": "Machine-readable schema for plugin.json in Agent Plugins 1.1.0. The Agent Plugins specification defines additional semantic and operational requirements.",
+  "$comment": "When loading a plugin, clients must report and ignore unrecognized top-level properties, then validate the remaining manifest against this schema. All other schema violations are fatal.",
   "type": "object",
   "properties": {
     "$schema": {
