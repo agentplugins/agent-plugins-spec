@@ -20,6 +20,9 @@
         },
         "tool.before": {
           "$ref": "#/$defs/handlers"
+        },
+        "tool.after": {
+          "$ref": "#/$defs/handlers"
         }
       },
       "additionalProperties": false
@@ -391,6 +394,316 @@
           "additionalProperties": false
         }
       ]
+    },
+    "toolAfterInput": {
+      "title": "tool.after input",
+      "type": "object",
+      "properties": {
+        "hook_event_name": {
+          "const": "tool.after"
+        },
+        "session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tool_use_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tool_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tool_input": true,
+        "tool_result": true,
+        "tool_profile": {
+          "$ref": "#/$defs/toolAfterProfile"
+        }
+      },
+      "required": [
+        "hook_event_name",
+        "session_id",
+        "cwd",
+        "tool_use_id",
+        "tool_name",
+        "tool_input",
+        "tool_result"
+      ],
+      "additionalProperties": false
+    },
+    "toolAfterProfile": {
+      "title": "Portable tool result profile",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/mcpToolAfterProfile"
+        },
+        {
+          "$ref": "#/$defs/shellToolAfterProfile"
+        },
+        {
+          "$ref": "#/$defs/fileReadToolAfterProfile"
+        },
+        {
+          "$ref": "#/$defs/fileModifyToolAfterProfile"
+        },
+        {
+          "$ref": "#/$defs/webFetchToolAfterProfile"
+        },
+        {
+          "$ref": "#/$defs/webSearchToolAfterProfile"
+        }
+      ]
+    },
+    "mcpToolAfterProfile": {
+      "title": "MCP tool result profile",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "mcp"
+        },
+        "input": {
+          "$ref": "#/$defs/mcpToolProfile/properties/input"
+        },
+        "result": {
+          "type": "object",
+          "description": "An MCP CallToolResult object, as defined by the MCP protocol."
+        }
+      },
+      "required": ["name", "input", "result"],
+      "additionalProperties": false
+    },
+    "shellToolAfterProfile": {
+      "title": "Shell tool result profile",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "shell"
+        },
+        "input": {
+          "$ref": "#/$defs/shellToolProfile/properties/input"
+        },
+        "result": {
+          "type": "object",
+          "properties": {
+            "output": {
+              "type": "string"
+            },
+            "exit_code": {
+              "type": "integer"
+            }
+          },
+          "required": ["output", "exit_code"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["name", "input", "result"],
+      "additionalProperties": false
+    },
+    "fileReadToolAfterProfile": {
+      "title": "File read tool result profile",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "file.read"
+        },
+        "input": {
+          "$ref": "#/$defs/fileReadToolProfile/properties/input"
+        },
+        "result": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/$defs/textContent"
+                      },
+                      {
+                        "$ref": "#/$defs/binaryContent"
+                      }
+                    ]
+                  }
+                }
+              },
+              "required": ["content"],
+              "additionalProperties": false
+            },
+            {
+              "$ref": "#/$defs/toolError"
+            }
+          ]
+        }
+      },
+      "required": ["name", "input", "result"],
+      "additionalProperties": false
+    },
+    "fileModifyToolAfterProfile": {
+      "title": "File modification tool result profile",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "file.modify"
+        },
+        "input": {
+          "$ref": "#/$defs/fileModifyToolProfile/properties/input"
+        },
+        "result": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false
+            },
+            {
+              "$ref": "#/$defs/toolError"
+            }
+          ]
+        }
+      },
+      "required": ["name", "input", "result"],
+      "additionalProperties": false
+    },
+    "webFetchToolAfterProfile": {
+      "title": "Web fetch tool result profile",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "web.fetch"
+        },
+        "input": {
+          "$ref": "#/$defs/webFetchToolProfile/properties/input"
+        },
+        "result": {
+          "type": "object",
+          "properties": {
+            "status_code": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 599
+            },
+            "content": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/textContent"
+              }
+            }
+          },
+          "required": ["status_code", "content"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["name", "input", "result"],
+      "additionalProperties": false
+    },
+    "webSearchToolAfterProfile": {
+      "title": "Web search tool result profile",
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "web.search"
+        },
+        "input": {
+          "$ref": "#/$defs/webSearchToolProfile/properties/input"
+        },
+        "result": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "snippet": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["url", "title"],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": ["items"],
+              "additionalProperties": false
+            },
+            {
+              "$ref": "#/$defs/toolError"
+            }
+          ]
+        }
+      },
+      "required": ["name", "input", "result"],
+      "additionalProperties": false
+    },
+    "textContent": {
+      "title": "Text content block",
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "text"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": ["type", "text"],
+      "additionalProperties": false
+    },
+    "binaryContent": {
+      "title": "Binary content block",
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "binary"
+        },
+        "media_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "data": {
+          "type": "string",
+          "contentEncoding": "base64"
+        }
+      },
+      "required": ["type", "media_type", "data"],
+      "additionalProperties": false
+    },
+    "toolError": {
+      "title": "Portable tool error",
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        }
+      },
+      "required": ["error"],
+      "additionalProperties": false
+    },
+    "toolAfterOutput": {
+      "title": "tool.after output",
+      "type": "object",
+      "properties": {
+        "additional_context": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["additional_context"],
+      "additionalProperties": false
     },
     "agentAfterResponseInput": {
       "title": "agent.after_response input",
