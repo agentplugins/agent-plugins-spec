@@ -15,6 +15,9 @@
         "session.start": {
           "$ref": "#/$defs/handlers"
         },
+        "prompt.submit": {
+          "$ref": "#/$defs/handlers"
+        },
         "agent.after_response": {
           "$ref": "#/$defs/handlers"
         },
@@ -88,6 +91,58 @@
       },
       "required": ["additional_context"],
       "additionalProperties": false
+    },
+    "promptSubmitInput": {
+      "title": "prompt.submit input",
+      "type": "object",
+      "properties": {
+        "hook_event_name": {
+          "const": "prompt.submit"
+        },
+        "session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prompt": {
+          "type": "string"
+        }
+      },
+      "required": ["hook_event_name", "session_id", "cwd", "prompt"],
+      "additionalProperties": false
+    },
+    "promptSubmitOutput": {
+      "title": "prompt.submit output",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "additional_context": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": ["additional_context"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "decision": {
+              "const": "deny"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": ["decision", "reason"],
+          "additionalProperties": false
+        }
+      ]
     },
     "toolBeforeInput": {
       "title": "tool.before input",
