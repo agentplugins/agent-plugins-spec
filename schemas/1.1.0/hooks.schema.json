@@ -12,19 +12,19 @@
     "hooks": {
       "type": "object",
       "properties": {
-        "session.start": {
+        "SessionStart": {
           "$ref": "#/$defs/handlers"
         },
-        "prompt.submit": {
+        "UserPromptSubmit": {
           "$ref": "#/$defs/handlers"
         },
-        "agent.after_response": {
+        "Stop": {
           "$ref": "#/$defs/handlers"
         },
-        "tool.before": {
+        "PreToolUse": {
           "$ref": "#/$defs/handlers"
         },
-        "tool.after": {
+        "PostToolUse": {
           "$ref": "#/$defs/handlers"
         }
       },
@@ -72,11 +72,11 @@
       }
     },
     "sessionStartInput": {
-      "title": "session.start input",
+      "title": "SessionStart input",
       "type": "object",
       "properties": {
         "hook_event_name": {
-          "const": "session.start"
+          "const": "SessionStart"
         },
         "session_id": {
           "type": "string",
@@ -91,7 +91,7 @@
       "additionalProperties": false
     },
     "sessionStartOutput": {
-      "title": "session.start output",
+      "title": "SessionStart output",
       "type": "object",
       "properties": {
         "additional_context": {
@@ -102,12 +102,12 @@
       "required": ["additional_context"],
       "additionalProperties": false
     },
-    "promptSubmitInput": {
-      "title": "prompt.submit input",
+    "userPromptSubmitInput": {
+      "title": "UserPromptSubmit input",
       "type": "object",
       "properties": {
         "hook_event_name": {
-          "const": "prompt.submit"
+          "const": "UserPromptSubmit"
         },
         "session_id": {
           "type": "string",
@@ -124,8 +124,8 @@
       "required": ["hook_event_name", "session_id", "cwd", "prompt"],
       "additionalProperties": false
     },
-    "promptSubmitOutput": {
-      "title": "prompt.submit output",
+    "userPromptSubmitOutput": {
+      "title": "UserPromptSubmit output",
       "oneOf": [
         {
           "type": "object",
@@ -154,12 +154,12 @@
         }
       ]
     },
-    "toolBeforeInput": {
-      "title": "tool.before input",
+    "preToolUseInput": {
+      "title": "PreToolUse input",
       "type": "object",
       "properties": {
         "hook_event_name": {
-          "const": "tool.before"
+          "const": "PreToolUse"
         },
         "session_id": {
           "type": "string",
@@ -431,8 +431,8 @@
       "required": ["name", "input"],
       "additionalProperties": false
     },
-    "toolBeforeOutput": {
-      "title": "tool.before output",
+    "preToolUseOutput": {
+      "title": "PreToolUse output",
       "oneOf": [
         {
           "type": "object",
@@ -460,12 +460,12 @@
         }
       ]
     },
-    "toolAfterInput": {
-      "title": "tool.after input",
+    "postToolUseInput": {
+      "title": "PostToolUse input",
       "type": "object",
       "properties": {
         "hook_event_name": {
-          "const": "tool.after"
+          "const": "PostToolUse"
         },
         "session_id": {
           "type": "string",
@@ -758,8 +758,8 @@
       "required": ["error"],
       "additionalProperties": false
     },
-    "toolAfterOutput": {
-      "title": "tool.after output",
+    "postToolUseOutput": {
+      "title": "PostToolUse output",
       "type": "object",
       "properties": {
         "additional_context": {
@@ -770,12 +770,12 @@
       "required": ["additional_context"],
       "additionalProperties": false
     },
-    "agentAfterResponseInput": {
-      "title": "agent.after_response input",
+    "stopInput": {
+      "title": "Stop input",
       "type": "object",
       "properties": {
         "hook_event_name": {
-          "const": "agent.after_response"
+          "const": "Stop"
         },
         "session_id": {
           "type": "string",
@@ -797,8 +797,8 @@
       ],
       "additionalProperties": false
     },
-    "agentAfterResponseOutput": {
-      "title": "agent.after_response output",
+    "stopOutput": {
+      "title": "Stop output",
       "type": "object",
       "properties": {
         "decision": {
