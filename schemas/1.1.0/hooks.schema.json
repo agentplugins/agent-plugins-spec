@@ -56,10 +56,20 @@
           "items": {
             "type": "string"
           }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
         }
       },
       "required": ["command"],
       "additionalProperties": false
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Client-specific handler settings keyed by reverse-domain extension namespace. Agent Plugins assigns no semantics to namespace object contents.",
+      "additionalProperties": {
+        "type": "object"
+      }
     },
     "sessionStartInput": {
       "title": "session.start input",
