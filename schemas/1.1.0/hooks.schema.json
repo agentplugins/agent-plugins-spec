@@ -22,10 +22,10 @@
           "$ref": "#/$defs/handlers"
         },
         "PreToolUse": {
-          "$ref": "#/$defs/handlers"
+          "$ref": "#/$defs/toolHandlers"
         },
         "PostToolUse": {
-          "$ref": "#/$defs/handlers"
+          "$ref": "#/$defs/toolHandlers"
         }
       },
       "additionalProperties": false
@@ -59,6 +59,45 @@
         },
         "extensions": {
           "$ref": "#/$defs/extensions"
+        }
+      },
+      "required": ["command"],
+      "additionalProperties": false
+    },
+    "toolHandlers": {
+      "title": "Tool event handlers",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/toolHandler"
+      },
+      "minItems": 1
+    },
+    "toolHandler": {
+      "title": "Tool event handler",
+      "type": "object",
+      "properties": {
+        "command": {
+          "$ref": "#/$defs/handler/properties/command"
+        },
+        "args": {
+          "$ref": "#/$defs/handler/properties/args"
+        },
+        "toolProfiles": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "mcp",
+              "shell",
+              "file.read",
+              "file.modify",
+              "web.fetch",
+              "web.search"
+            ]
+          },
+          "minItems": 1
+        },
+        "extensions": {
+          "$ref": "#/$defs/handler/properties/extensions"
         }
       },
       "required": ["command"],
