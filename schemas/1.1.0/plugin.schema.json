@@ -51,6 +51,14 @@
     "license": {
       "type": "string"
     },
+    "privacyPolicyUrl": {
+      "type": "string",
+      "description": "Publisher's privacy policy URL (HTTPS recommended)."
+    },
+    "termsOfServiceUrl": {
+      "type": "string",
+      "description": "Publisher's terms of service URL (HTTPS recommended)."
+    },
     "keywords": {
       "type": "array",
       "items": {
