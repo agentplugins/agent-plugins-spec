@@ -55,6 +55,10 @@ Plugins currently cannot declare dependencies on other plugins. A future version
 - Resolution order and conflict handling for transitive dependencies
 - Peer dependency semantics for shared components
 
+## Platform-specific subprocess selection
+
+The portable subprocess model does not select among operating-system- or architecture-specific executables. A future version may define an applicability or selection mechanism if clients and plugin authors demonstrate a common interoperability need.
+
 ## Plugin testing and validation
 
 No test harness or validation tool is specified. A future version may define:
