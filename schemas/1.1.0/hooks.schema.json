@@ -13,19 +13,19 @@
       "type": "object",
       "properties": {
         "SessionStart": {
-          "$ref": "#/$defs/handlers"
+          "$ref": "#/$defs/handlersWithoutFailurePolicy"
         },
         "UserPromptSubmit": {
           "$ref": "#/$defs/handlers"
         },
         "Stop": {
-          "$ref": "#/$defs/handlers"
+          "$ref": "#/$defs/handlersWithoutFailurePolicy"
         },
         "PreToolUse": {
           "$ref": "#/$defs/handlers"
         },
         "PostToolUse": {
-          "$ref": "#/$defs/handlers"
+          "$ref": "#/$defs/handlersWithoutFailurePolicy"
         }
       },
       "additionalProperties": false
@@ -34,6 +34,16 @@
   "required": ["$schema", "hooks"],
   "additionalProperties": false,
   "$defs": {
+    "handlersWithoutFailurePolicy": {
+      "$ref": "#/$defs/handlers",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "onFailure": false
+        }
+      }
+    },
     "handlers": {
       "title": "Hook handlers",
       "type": "array",
@@ -56,6 +66,12 @@
           "items": {
             "type": "string"
           }
+        },
+        "onFailure": {
+          "type": "string",
+          "enum": ["block", "continue"],
+          "description": "Requires blocking when this handler fails. The spelling \"continue\" is reserved; authors must not use it in this version. Clients treat it as omission of this field.",
+          "examples": ["block"]
         },
         "extensions": {
           "$ref": "#/$defs/extensions"
