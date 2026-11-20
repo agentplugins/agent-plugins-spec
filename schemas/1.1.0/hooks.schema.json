@@ -66,7 +66,7 @@
     },
     "extensions": {
       "type": "object",
-      "description": "Client-specific handler settings keyed by reverse-domain extension namespace. Agent Plugins assigns no semantics to namespace object contents.",
+      "description": "Per-handler extension data keyed by reverse-domain namespace. Agent Plugins assigns no semantics to namespace object contents.",
       "additionalProperties": {
         "type": "object"
       }
