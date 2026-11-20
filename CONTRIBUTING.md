@@ -8,7 +8,7 @@ Start a [GitHub Discussion](https://github.com/agentplugins/agent-plugins-spec/d
 
 - the concrete implementation or interoperability problem;
 - which plugin authors or client implementers encounter it;
-- why the problem belongs in the portable specification rather than client policy or a client-specific extension; and
+- why the problem belongs in the portable specification rather than client policy or an extension; and
 - which implementers are prepared to adopt the proposed behavior.
 
 A technically complete pull request is not, by itself, evidence of implementor consensus or adoption. Maintainers may close proposals that have not established a concrete portability need or sufficient implementor support. When in doubt, begin with a Discussion rather than investing in a specification patch.
