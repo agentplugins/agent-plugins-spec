@@ -535,7 +535,7 @@
         },
         "result": {
           "type": "object",
-          "description": "An MCP CallToolResult object, as defined by the MCP protocol."
+          "description": "The MCP CallToolResult object returned to the agent, as defined by the MCP protocol."
         }
       },
       "required": ["name", "input", "result"],
