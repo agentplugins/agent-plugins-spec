@@ -113,6 +113,10 @@
           "type": "string",
           "minLength": 1
         },
+        "agent_id": {
+          "type": "string",
+          "minLength": 1
+        },
         "cwd": {
           "type": "string",
           "minLength": 1
@@ -162,6 +166,10 @@
           "const": "PreToolUse"
         },
         "session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "agent_id": {
           "type": "string",
           "minLength": 1
         },
@@ -468,6 +476,10 @@
           "const": "PostToolUse"
         },
         "session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "agent_id": {
           "type": "string",
           "minLength": 1
         },
